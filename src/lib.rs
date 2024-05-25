@@ -139,7 +139,7 @@ impl<T> SparseSet<T> {
     pub fn swap_remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.sparse.len());
+        debug_assert!(key.sparse_index < self.sparse.len());
 
         return match self.sparse[key.sparse_index].clone() {
             SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
@@ -170,7 +170,7 @@ impl<T> SparseSet<T> {
     pub fn remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.sparse.len());
+        debug_assert!(key.sparse_index < self.sparse.len());
 
         return match self.sparse[key.sparse_index].clone() {
             SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
@@ -199,8 +199,8 @@ impl<T> SparseSet<T> {
     pub fn swap(&mut self, key1: SparseKey, key2: SparseKey) {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key1.sparse_index < self.sparse.len());
-        assert!(key2.sparse_index < self.sparse.len());
+        debug_assert!(key1.sparse_index < self.sparse.len());
+        debug_assert!(key2.sparse_index < self.sparse.len());
 
         match (
             self.sparse[key1.sparse_index].clone(),
@@ -237,7 +237,7 @@ impl<T> SparseSet<T> {
     pub fn get(&self, key: SparseKey) -> Option<&T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.sparse.len());
+        debug_assert!(key.sparse_index < self.sparse.len());
 
         match &self.sparse[key.sparse_index] {
             SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
@@ -255,7 +255,7 @@ impl<T> SparseSet<T> {
     pub fn get_mut(&mut self, key: SparseKey) -> Option<&mut T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.sparse.len());
+        debug_assert!(key.sparse_index < self.sparse.len());
 
         match &mut self.sparse[key.sparse_index] {
             SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
@@ -271,6 +271,7 @@ impl<T> SparseSet<T> {
     /// O(1) time complexity.
     pub fn contains(&self, key: SparseKey) -> bool {
         if key.sparse_index >= self.sparse.len() {
+            debug_assert!(false, "The key is not valid for this SparseSet");
             return false;
         }
 
