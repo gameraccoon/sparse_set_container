@@ -9,3 +9,6 @@ license = "MIT"
 categories = ["data-structures"]
 
 [dependencies]
+
+[dev-dependencies]
+bencher = "0.1.5"
