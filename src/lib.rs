@@ -349,10 +349,32 @@ mod tests {
         }
     }
 
+    // empty sparse set => created with capacity => no items
+    #[test]
+    fn empty_sparse_set_created_with_capacity_no_items() {
+        let sparse_set: SparseSet<i32> = SparseSet::with_capacity(10);
+
+        assert_eq!(sparse_set.size(), 0);
+        for _ in sparse_set.values() {
+            assert!(false);
+        }
+    }
+
     // empty sparse set => push item => has one item
     #[test]
     fn empty_sparse_set_push_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        let key = sparse_set.push(42);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // empty sparse set with capacity => push item => has one item
+    #[test]
+    fn empty_sparse_set_with_capacity_push_item_has_one_item() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(10);
 
         let key = sparse_set.push(42);
 
@@ -372,9 +394,9 @@ mod tests {
         assert_eq!(sparse_set.get(key), Some(&43));
     }
 
-    // sparse set with one item => remove_stable item => no items
+    // sparse set with one item => remove item => no items
     #[test]
-    fn sparse_set_with_one_item_remove_stable_item_no_items() {
+    fn sparse_set_with_one_item_remove_item_no_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
 
@@ -384,9 +406,9 @@ mod tests {
         assert_eq!(sparse_set.get(key), None);
     }
 
-    // sparse set with one item => remove_swap item => no items
+    // sparse set with one item => swap_remove item => no items
     #[test]
-    fn sparse_set_with_one_item_remove_swap_item_no_items() {
+    fn swap_sparse_set_with_one_item_remove_item_no_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
 
@@ -396,7 +418,7 @@ mod tests {
         assert_eq!(sparse_set.get(key), None);
     }
 
-    // sparse set with two items => remove_stable first item => has one item
+    // sparse set with two items => remove first item => has one item
     #[test]
     fn sparse_set_with_two_items_remove_first_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
@@ -410,9 +432,9 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
 
-    // sparse set with two items => remove_swap first item => has one item
+    // sparse set with two items => swap_remove first item => has one item
     #[test]
-    fn sparse_set_with_two_items_remove_swap_first_item_has_one_item() {
+    fn swap_sparse_set_with_two_items_remove_first_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -424,9 +446,9 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
 
-    // sparse set with two items => remove_stable second item => has one item
+    // sparse set with two items => remove second item => has one item
     #[test]
-    fn sparse_set_with_two_items_remove_stable_second_item_has_one_item() {
+    fn sparse_set_with_two_items_remove_second_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -438,9 +460,9 @@ mod tests {
         assert_eq!(sparse_set.get(key2), None);
     }
 
-    // sparse set with two items => remove_swap second item => has one item
+    // sparse set with two items => swap_remove second item => has one item
     #[test]
-    fn sparse_set_with_two_items_remove_swap_second_item_has_one_item() {
+    fn swap_sparse_set_with_two_items_remove_second_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -452,7 +474,7 @@ mod tests {
         assert_eq!(sparse_set.get(key2), None);
     }
 
-    // spare set with one item => remove_stable an item and push new item => has one item
+    // spare set with one item => remove an item and push new item => has one item
     #[test]
     fn sparse_set_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
@@ -466,9 +488,9 @@ mod tests {
         assert_eq!(sparse_set.get(new_key), Some(&43));
     }
 
-    // sparse set with one item => remove_swap an item and push new item => has one item
+    // sparse set with one item => swap_remove an item and push new item => has one item
     #[test]
-    fn sparse_set_with_one_item_remove_swap_an_item_and_push_new_item_has_one_item() {
+    fn swap_sparse_set_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
         sparse_set.swap_remove(key);
@@ -480,9 +502,9 @@ mod tests {
         assert_eq!(sparse_set.get(new_key), Some(&43));
     }
 
-    // sparse set with five items => remove_stable first item => order is not changed
+    // sparse set with five items => remove first item => order is not changed
     #[test]
-    fn sparse_set_with_five_items_remove_stable_first_item_order_is_not_changed() {
+    fn sparse_set_with_five_items_remove_first_item_order_is_not_changed() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -511,22 +533,22 @@ mod tests {
         assert_eq!(sparse_set.get(key5), Some(&46));
     }
 
-    // sparse set with one item => remove_stable item twice => no items
+    // sparse set with one item => remove item twice => no items
     #[test]
-    fn sparse_set_with_one_item_remove_stable_item_twice_no_items() {
+    fn sparse_set_with_one_item_remove_item_twice_no_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
 
-        sparse_set.swap_remove(key);
-        sparse_set.swap_remove(key);
+        sparse_set.remove(key);
+        sparse_set.remove(key);
 
         assert_eq!(sparse_set.size(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
-    // sparse set with one item => remove_swap item twice => no items
+    // sparse set with one item => remove item twice => no items
     #[test]
-    fn sparse_set_with_one_item_remove_swap_item_twice_no_items() {
+    fn sparse_set_with_one_item_swap_remove_item_twice_no_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
 
