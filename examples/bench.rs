@@ -88,6 +88,36 @@ fn push_hundred_elements_hash_map(b: &mut Bencher) {
     });
 }
 
+fn create_with_capacity_and_push_hundred_elements_sparse_set(b: &mut Bencher) {
+    b.iter(|| {
+        let mut set = SparseSet::<String>::with_capacity(100);
+        for i in INDEXES.iter() {
+            set.push(i.to_string());
+        }
+        black_box(&set);
+    });
+}
+
+fn create_with_capacity_and_push_hundred_elements_vec(b: &mut Bencher) {
+    b.iter(|| {
+        let mut vec = Vec::<String>::with_capacity(100);
+        for i in INDEXES.iter() {
+            vec.push(i.to_string());
+        }
+        black_box(&vec);
+    });
+}
+
+fn create_with_capacity_and_push_hundred_elements_hash_map(b: &mut Bencher) {
+    b.iter(|| {
+        let mut map = HashMap::<i32, String>::with_capacity(100);
+        for i in INDEXES.iter() {
+            map.insert(*i as i32, i.to_string());
+        }
+        black_box(&map);
+    });
+}
+
 fn get_hundred_elements_sparse_set(b: &mut Bencher) {
     let mut set = SparseSet::<String>::new();
     let mut keys = Vec::new();
@@ -294,6 +324,9 @@ benchmark_group!(
     push_hundred_elements_sparse_set,
     push_hundred_elements_vec,
     push_hundred_elements_hash_map,
+    create_with_capacity_and_push_hundred_elements_sparse_set,
+    create_with_capacity_and_push_hundred_elements_vec,
+    create_with_capacity_and_push_hundred_elements_hash_map,
     get_hundred_elements_sparse_set,
     get_hundred_elements_vec,
     get_hundred_elements_hash_map,
