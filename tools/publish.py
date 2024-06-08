@@ -23,7 +23,7 @@ if push:
         exit(1)
 
     print("Creating a new tag in git")
-    exit_code = os.system(f"git tag {version}")
+    exit_code = os.system(f"git tag v{version}")
     if exit_code != 0:
         print("Failed to create a tag, exiting")
         exit(1)
