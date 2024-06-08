@@ -6,11 +6,13 @@ A container based on a sparse set
 
 [![Download Status][shields.io download count]][crates.io link]
 
+<!--badge links start-->
 [crates.io shield]: https://img.shields.io/crates/v/sparse_set_container?label=latest
 [crates.io link]: https://crates.io/crates/sparse_set_container
 [docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version=1.0.0
 [docs.rs link]: https://docs.rs/sparse_set_container/1.0.0/sparse_set_container/
 [shields.io download count]: https://img.shields.io/crates/d/sparse_set_container.svg
+<!--badge links end-->
 
 ## Usage
 

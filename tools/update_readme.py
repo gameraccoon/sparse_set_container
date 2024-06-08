@@ -7,18 +7,37 @@ def get_version():
     # get the version from 'cargo pkgid' command
     pkgid = subprocess.run(['cargo', 'pkgid'], stdout=subprocess.PIPE)
     pkgid = pkgid.stdout.decode('utf-8')
-    version = re.search(r'@(\d+\.\d+)\.\d+', pkgid).group(1)
+    version = re.search(r'@(\d+\.\d+\.\d+)', pkgid).group(1)
     return version
 
 
-def replace_version(readme, version):
+def replace_badge_links(readme, full_version):
+    crates_io_shield = f'[crates.io shield]: https://img.shields.io/crates/v/sparse_set_container?label=latest'
+    crates_io_link = f'[crates.io link]: https://crates.io/crates/sparse_set_container'
+    docs_rs_badge = f'[docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version={version}'
+    docs_rs_link = f'[docs.rs link]: https://docs.rs/sparse_set_container/{version}/sparse_set_container/'
+    shields_io_download_count = f'[shields.io download count]: https://img.shields.io/crates/d/sparse_set_container.svg'
+
+    badges = f'{crates_io_shield}\n{crates_io_link}\n{docs_rs_badge}\n{docs_rs_link}\n{shields_io_download_count}'
+
+    start = '<!--badge links start-->'
+    end = '<!--badge links end-->'
+    start_index = readme.find(start)
+    end_index = readme.find(end)
+
+    return readme[:start_index + len(start)] + "\n" + badges + "\n" + readme[end_index:]
+
+
+def replace_install_instruction(readme, version):
     start = '<!--install instruction start-->'
     end = '<!--install instruction end-->'
     start_index = readme.find(start)
     end_index = readme.find(end)
     pkg = 'sparse_set_container'
 
-    replacement = f'\n```toml\n[dependencies]\n{pkg} = "{version}"\n```\n'
+    short_version = '.'.join(version.split('.')[:2])
+
+    replacement = f'\n```toml\n[dependencies]\n{pkg} = "{short_version}"\n```\n'
     return readme[:start_index + len(start)] + replacement + readme[end_index:]
 
 
@@ -76,7 +95,9 @@ print(f'Latest version: {version}')
 with open('README.md', 'r') as file:
     readme = file.read()
 
-readme = replace_version(readme, version)
+readme = replace_badge_links(readme, version)
+
+readme = replace_install_instruction(readme, version)
 
 readme = replace_examples(readme)
 
