@@ -10,8 +10,20 @@ if status:
     print("Git has changes, commit them first")
     exit(1)
 
+version = os.popen("cargo pkgid").read().split("@")[1].strip()
+print(f"Current version is '{version}'")
+
 push = "--push" in sys.argv
 if push:
+    print("Pushing all changes to git")
+    os.system("git push")
+
+    print("Creating a new tag in git")
+    os.system(f"git tag {version}")
+
+    print("Pushing the tag to git")
+    os.system("git push --tags")
+
     print("Publishing to crates.io")
     os.system("cargo publish")
 else:
