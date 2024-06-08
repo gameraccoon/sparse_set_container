@@ -90,24 +90,20 @@ fn main() {
 The values captured to illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap:
 
 <!--benchmark table start-->
-| Test                         | `SparseSet<String>` | `Vec<String>`     | `HashMap<i32, String>` |
-|------------------------------|---------------------|-------------------|------------------------|
-| Create empty                 | 0 ns ±0             | 0 ns ±0           | 2 ns ±0                |
-| Create with capacity         | 54 ns ±1            | 16 ns ±1          | 33 ns ±1               |
-| Push 100 elements            | 3,860 ns ±112       | 3,159 ns ±97      | 5,528 ns ±249          |
-| With capacity push 100       | 3,307 ns ±88        | 3,234 ns ±93      | 4,430 ns ±95           |
-| Lookup 100 elements          | 88 ns ±1            | 35 ns ±22         | 464 ns ±14             |
-| Iterate over 100 elements    | 30 ns ±0            | 30 ns ±0          | 41 ns ±1               |
-| Clone with 100 elements      | 2,364 ns ±52        | 2,261 ns ±59      | 1,511 ns ±52           |
-| Clone 100 and remove 10      | 3,215 ns ±141       | 2,697 ns ±128     | 1,683 ns ±182          |
-| Clone 100 and swap_remove 10 | 2,595 ns ±106       | 2,462 ns ±126     | N/A                    |
-| (~) remove 10 from 100       | 851 ms ±193         | 436 ms ±187       | 172 ms ±234            |
-| (~) swap_remove 10 from 100  | 231 ms ±158         | 201 ms ±185       | N/A                    |
+| Benchmark | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` |
+| --- | --- | --- | ---|
+| Create empty | 0 ns ±0 | 0 ns ±0 | 1 ns ±1 |
+| Create with capacity | 54 ns ±0 | 16 ns ±0 | 33 ns ±1 |
+| Push 100 elements | 3,842 ns ±95 | 2,659 ns ±101 | 5,636 ns ±191 |
+| With capacity push 100 | 3,343 ns ±25 | 3,257 ns ±75 | 4,426 ns ±122 |
+| Lookup 100 elements | 88 ns ±2 | 39 ns ±23 | 464 ns ±12 |
+| Iterate over 100 elements | 30 ns ±0 | 30 ns ±0 | 41 ns ±1 |
+| Clone with 100 elements | 2,388 ns ±22 | 2,247 ns ±12 | 1,527 ns ±60 |
+| Clone 100 and remove 10 | 3,174 ns ±161 | 2,367 ns ±140 | 1,704 ns ±159 |
+| Clone 100 and swap_remove 10 | 2,575 ns ±134 | 2,181 ns ±68 | N/A |
 <!--benchmark table end-->
 
-(~) calculated by subtracting time to clone from clone+remove, can be highly inaccurate.
-
-To run the benchmark on your machine, run `cargo run --example bench --release`
+To run the benchmark on your machine, execute `cargo run --example bench --release`
 
 ### License
 
