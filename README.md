@@ -1,5 +1,8 @@
 # Sparse Set Container
-A container based on a sparse set
+A container based on a sparse set.
+
+It is useful if you want a container with performance close to Vec but you also want to safely store the indexes to the elements (so that they are not invalidated on removals).  
+E.g. you have a list of elements in UI that the user can add and remove, but you want to refer to the elements of that list from somewhere else.
 
 [![crates.io][crates.io shield]][crates.io link]
 [![Documentation][docs.rs badge]][docs.rs link]
@@ -49,11 +52,6 @@ Differences to Vec:
   - per each `2^(sizeof(usize)*8)` removals the memory consumption will also grow by `2*sizeof(usize)`
     - (e.g. 16 bytes per 18446744073709551616 elements removed on 64-bit systems)
 - Many Vec operations are not supported (create an [issue on github](https://github.com/gameraccoon/sparse_set_container/issues) if you want to request one)
-
-### When it is useful
-
-If you want to have a Vec of your elements but also want to store indexes to it in a safe way.  
-E.g. you have a list of elements in UI that the user can add and remove, but you want to refer to the elements from that list from somewhere else.
 
 ### Examples
 
