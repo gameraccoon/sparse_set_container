@@ -15,11 +15,12 @@ A container based on a sparse set
 ## Usage
 
 Add this to your Cargo.toml:
-
+<!--install instruction start-->
 ```toml
 [dependencies]
 sparse_set_container = "1.0"
 ```
+<!--install instruction end-->
 
 ### Description
 
@@ -54,35 +55,41 @@ E.g. you have a list of elements in UI that the user can add and remove, but you
 
 ### Examples
 
+<!--readme_example.rs start-->
 ```rust
+extern crate sparse_set_container;
 use sparse_set_container::SparseSet;
 
-let mut elements = SparseSet::new();
-elements.push("1");
-let key2 = elements.push("2");
-elements.push("3");
+fn main() {
+    let mut elements = SparseSet::new();
+    elements.push("1");
+    let key2 = elements.push("2");
+    elements.push("3");
 
-elements.remove(key2);
-elements.push("4")
+    elements.remove(key2);
+    elements.push("4");
 
-if !elements.contains(key2) {
-    println!("Value 2 is not in the container");
-}
+    if !elements.contains(key2) {
+        println!("Value 2 is not in the container");
+    }
 
-// Prints 1 3 4 
-for v in elements.values() {
-    print!("{} ", v);
-}
+    // Prints 1 3 4
+    for v in elements.values() {
+        print!("{} ", v);
+    }
 
-// Prints 1 3 4 
-for k in elements.keys() {
-    print!("{} ", elements.get(k).unwrap());
+    // Prints 1 3 4
+    for k in elements.keys() {
+        print!("{} ", elements.get(k).unwrap());
+    }
 }
 ```
+<!--readme_example.rs end-->
 ### Benchmarks
 
 The values captured to illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap:
 
+<!--benchmark table start-->
 | Test                         | `SparseSet<String>` | `Vec<String>`     | `HashMap<i32, String>` |
 |------------------------------|---------------------|-------------------|------------------------|
 | Create empty                 | 0 ns ±0             | 0 ns ±0           | 2 ns ±0                |
@@ -96,6 +103,7 @@ The values captured to illustrate the difference between this SparseSet containe
 | Clone 100 and swap_remove 10 | 2,595 ns ±106       | 2,462 ns ±126     | N/A                    |
 | (~) remove 10 from 100       | 851 ms ±193         | 436 ms ±187       | 172 ms ±234            |
 | (~) swap_remove 10 from 100  | 231 ms ±158         | 201 ms ±185       | N/A                    |
+<!--benchmark table end-->
 
 (~) calculated by subtracting time to clone from clone+remove, can be highly inaccurate.
 
