@@ -76,27 +76,27 @@ impl<T> SparseArrayStorage<T> {
         self.dense_values.swap_remove(index)
     }
 
-    pub(crate) fn get_dense_values(&self) -> &Vec<T> {
+    pub(crate) fn get_dense_values(&self) -> &[T] {
         &self.dense_values
     }
 
-    pub(crate) fn get_dense_values_mut(&mut self) -> &mut Vec<T> {
+    pub(crate) fn get_dense_values_mut(&mut self) -> &mut [T] {
         &mut self.dense_values
     }
 
-    pub(crate) fn get_dense_keys(&self) -> &Vec<SparseKey> {
+    pub(crate) fn get_dense_keys(&self) -> &[SparseKey] {
         &self.dense_keys
     }
 
-    pub(crate) fn get_dense_keys_mut(&mut self) -> &mut Vec<SparseKey> {
+    pub(crate) fn get_dense_keys_mut(&mut self) -> &mut [SparseKey] {
         &mut self.dense_keys
     }
 
-    pub(crate) fn get_sparse(&self) -> &Vec<SparseEntry> {
+    pub(crate) fn get_sparse(&self) -> &[SparseEntry] {
         &self.sparse
     }
 
-    pub(crate) fn get_sparse_mut(&mut self) -> &mut Vec<SparseEntry> {
+    pub(crate) fn get_sparse_mut(&mut self) -> &mut [SparseEntry] {
         &mut self.sparse
     }
 }
