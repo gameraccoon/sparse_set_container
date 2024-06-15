@@ -645,4 +645,358 @@ mod tests {
 
         assert!(!sparse_set.contains(key));
     }
+
+
+    // empty sparse set of strings => created => no items
+    #[test]
+    fn empty_sparse_set_of_strings_created_no_items() {
+        let sparse_set: SparseSet<String> = SparseSet::new();
+
+        assert_eq!(sparse_set.size(), 0);
+        for _ in sparse_set.values() {
+            assert!(false);
+        }
+    }
+
+    // empty sparse set of strings => created with capacity => no items
+    #[test]
+    fn empty_sparse_set_of_strings_created_with_capacity_no_items() {
+        let sparse_set: SparseSet<String> = SparseSet::with_capacity(10);
+
+        assert_eq!(sparse_set.size(), 0);
+        for _ in sparse_set.values() {
+            assert!(false);
+        }
+    }
+
+    // empty sparse set of strings => push item => has one item
+    #[test]
+    fn empty_sparse_set_of_strings_push_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let expected = "42".to_string();
+
+        let key = sparse_set.push("42".to_string());
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&expected));
+    }
+
+    // empty sparse set of strings with capacity => push item => has one item
+    #[test]
+    fn empty_sparse_set_of_strings_with_capacity_push_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(10);
+
+        let key = sparse_set.push("42".to_string());
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with one item => mutate the item => the item is changed
+    #[test]
+    fn sparse_set_of_strings_with_one_item_mutate_the_item_the_item_is_changed() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        *sparse_set.get_mut(key).unwrap() = "43".to_string();
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with one item => remove item => no items
+    #[test]
+    fn sparse_set_of_strings_with_one_item_remove_item_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.remove(key);
+
+        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set of strings with one item => swap_remove item => no items
+    #[test]
+    fn swap_sparse_set_of_strings_with_one_item_remove_item_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.swap_remove(key);
+
+        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set of strings with two items => remove first item => has one item
+    #[test]
+    fn sparse_set_of_strings_with_two_items_remove_first_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.remove(key1);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => swap_remove first item => has one item
+    #[test]
+    fn swap_sparse_set_of_strings_with_two_items_remove_first_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.swap_remove(key1);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => remove second item => has one item
+    #[test]
+    fn sparse_set_of_strings_with_two_items_remove_second_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.remove(key2);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), None);
+    }
+
+    // sparse set of strings with two items => swap_remove second item => has one item
+    #[test]
+    fn swap_sparse_set_of_strings_with_two_items_remove_second_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.swap_remove(key2);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), None);
+    }
+
+    // spare set of strings with one item => remove an item and push new item => has one item
+    #[test]
+    fn sparse_set_of_strings_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+        sparse_set.remove(key);
+
+        let new_key = sparse_set.push("43".to_string());
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), None);
+        assert_eq!(sparse_set.get(new_key), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with one item => swap_remove an item and push new item => has one item
+    #[test]
+    fn swap_sparse_set_of_strings_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+        sparse_set.swap_remove(key);
+
+        let new_key = sparse_set.push("43".to_string());
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), None);
+        assert_eq!(sparse_set.get(new_key), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with five items => remove first item => order is not changed
+    #[test]
+    fn sparse_set_of_strings_with_five_items_remove_first_item_order_is_not_changed() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
+
+        sparse_set.remove(key1);
+
+        assert_eq!(sparse_set.size(), 4);
+        for (i, value) in sparse_set.values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &"43".to_string());
+            } else if i == 1 {
+                assert_eq!(value, &"44".to_string());
+            } else if i == 2 {
+                assert_eq!(value, &"45".to_string());
+            } else {
+                assert_eq!(value, &"46".to_string());
+            }
+        }
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
+    }
+
+    // sparse set of strings with one item => remove item twice => no items
+    #[test]
+    fn sparse_set_of_strings_with_one_item_remove_item_twice_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.remove(key);
+        sparse_set.remove(key);
+
+        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set of strings with one item => remove item twice => no items
+    #[test]
+    fn sparse_set_of_strings_with_one_item_swap_remove_item_twice_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.swap_remove(key);
+        sparse_set.swap_remove(key);
+
+        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set of strings with three items => iterate over values => the values are iterated in order
+    #[test]
+    fn sparse_set_of_strings_with_three_items_iterate_over_values_the_values_are_iterated_in_order() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+        sparse_set.push("44".to_string());
+
+        for (i, value) in sparse_set.values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &"42".to_string());
+            } else if i == 1 {
+                assert_eq!(value, &"43".to_string());
+            } else {
+                assert_eq!(value, &"44".to_string());
+            }
+        }
+    }
+
+    // sparse set of strings with three items => iterate over keys => the keys are iterated in order
+    #[test]
+    fn sparse_set_of_strings_with_three_items_iterate_over_keys_the_keys_are_iterated_in_order() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+        sparse_set.push("44".to_string());
+
+        for (i, key) in sparse_set.keys().enumerate() {
+            if i == 0 {
+                let expected = "42".to_string();
+                assert_eq!(sparse_set.get(key), Some(&expected));
+            } else if i == 1 {
+                let expected = "43".to_string();
+                assert_eq!(sparse_set.get(key), Some(&expected));
+            } else {
+                assert_eq!(sparse_set.get(key), Some(&"44".to_string()));
+            }
+        }
+    }
+
+    // sparse set of strings with three items => iterate over key-values => the key-values are iterated in order
+    #[test]
+    fn sparse_set_of_strings_with_three_items_iterate_over_key_values_the_key_values_are_iterated_in_order() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        for (i, (key, value)) in sparse_set.key_values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &"42".to_string());
+                assert_eq!(key, key1);
+            } else if i == 1 {
+                assert_eq!(value, &"43".to_string());
+                assert_eq!(key, key2);
+            } else {
+                assert_eq!(value, &"44".to_string());
+                assert_eq!(key, key3);
+            }
+        }
+    }
+
+    // sparse set of strings with one item => iterate over values and mutate => the value is changed
+    #[test]
+    fn sparse_set_of_strings_with_one_item_iterate_over_values_and_mutate_the_value_is_changed() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        for value in sparse_set.values_mut() {
+            *value = "43".to_string();
+        }
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => swap the items => the items are swapped in order but not by keys
+    #[test]
+    fn sparse_set_of_strings_with_two_items_swap_the_items_the_items_are_swapped_in_order_but_not_by_keys() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.swap(key1, key2);
+
+        assert_eq!(sparse_set.size(), 2);
+        for (i, value) in sparse_set.values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &"43".to_string());
+            } else {
+                assert_eq!(value, &"42".to_string());
+            }
+        }
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => clone the set => cloned set has the same items
+    #[test]
+    fn sparse_set_of_strings_with_two_items_clone_the_set_cloned_set_has_the_same_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        let cloned_sparse_set = sparse_set.clone();
+
+        assert_eq!(cloned_sparse_set.size(), 2);
+        assert_eq!(cloned_sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(cloned_sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with one item => check if contains => returns true
+    #[test]
+    fn sparse_set_of_strings_with_one_item_check_if_contains_returns_true() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        assert!(sparse_set.contains(key));
+    }
+
+    // sparse set of strings with one item => remove the item and check if contains => returns false
+    #[test]
+    fn sparse_set_of_strings_with_one_item_remove_the_item_and_check_if_contains_returns_false() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.swap_remove(key);
+
+        assert!(!sparse_set.contains(key));
+    }
 }
