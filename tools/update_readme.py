@@ -7,7 +7,7 @@ def get_version():
     # get the version from 'cargo pkgid' command
     pkgid = subprocess.run(['cargo', 'pkgid'], stdout=subprocess.PIPE)
     pkgid = pkgid.stdout.decode('utf-8')
-    version = re.search(r'@(\d+\.\d+\.\d+)', pkgid).group(1)
+    version = re.search(r'[@#](\d+\.\d+\.\d+)', pkgid).group(1)
     return version
 
 
