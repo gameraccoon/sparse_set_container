@@ -612,18 +612,24 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
 
-    // sparse set with two items => clone the set => cloned set has the same items
+    // sparse set with five items => clone the set => cloned set has the same items
     #[test]
-    fn sparse_set_with_two_items_clone_the_set_cloned_set_has_the_same_items() {
+    fn sparse_set_with_five_items_clone_the_set_cloned_set_has_the_same_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+        let key5 = sparse_set.push(46);
 
         let cloned_sparse_set = sparse_set.clone();
 
-        assert_eq!(cloned_sparse_set.size(), 2);
+        assert_eq!(cloned_sparse_set.size(), 5);
         assert_eq!(cloned_sparse_set.get(key1), Some(&42));
         assert_eq!(cloned_sparse_set.get(key2), Some(&43));
+        assert_eq!(cloned_sparse_set.get(key3), Some(&44));
+        assert_eq!(cloned_sparse_set.get(key4), Some(&45));
+        assert_eq!(cloned_sparse_set.get(key5), Some(&46));
     }
 
     // sparse set with one item => check if contains => returns true
@@ -645,7 +651,6 @@ mod tests {
 
         assert!(!sparse_set.contains(key));
     }
-
 
     // empty sparse set of strings => created => no items
     #[test]
@@ -871,7 +876,8 @@ mod tests {
 
     // sparse set of strings with three items => iterate over values => the values are iterated in order
     #[test]
-    fn sparse_set_of_strings_with_three_items_iterate_over_values_the_values_are_iterated_in_order() {
+    fn sparse_set_of_strings_with_three_items_iterate_over_values_the_values_are_iterated_in_order()
+    {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         sparse_set.push("42".to_string());
         sparse_set.push("43".to_string());
@@ -911,7 +917,8 @@ mod tests {
 
     // sparse set of strings with three items => iterate over key-values => the key-values are iterated in order
     #[test]
-    fn sparse_set_of_strings_with_three_items_iterate_over_key_values_the_key_values_are_iterated_in_order() {
+    fn sparse_set_of_strings_with_three_items_iterate_over_key_values_the_key_values_are_iterated_in_order(
+    ) {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key1 = sparse_set.push("42".to_string());
         let key2 = sparse_set.push("43".to_string());
@@ -947,7 +954,8 @@ mod tests {
 
     // sparse set of strings with two items => swap the items => the items are swapped in order but not by keys
     #[test]
-    fn sparse_set_of_strings_with_two_items_swap_the_items_the_items_are_swapped_in_order_but_not_by_keys() {
+    fn sparse_set_of_strings_with_two_items_swap_the_items_the_items_are_swapped_in_order_but_not_by_keys(
+    ) {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key1 = sparse_set.push("42".to_string());
         let key2 = sparse_set.push("43".to_string());
@@ -966,18 +974,24 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
     }
 
-    // sparse set of strings with two items => clone the set => cloned set has the same items
+    // sparse set of strings with five items => clone the set => cloned set has the same items
     #[test]
-    fn sparse_set_of_strings_with_two_items_clone_the_set_cloned_set_has_the_same_items() {
+    fn sparse_set_of_strings_with_five_items_clone_the_set_cloned_set_has_the_same_items() {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key1 = sparse_set.push("42".to_string());
         let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
 
         let cloned_sparse_set = sparse_set.clone();
 
-        assert_eq!(cloned_sparse_set.size(), 2);
+        assert_eq!(cloned_sparse_set.size(), 5);
         assert_eq!(cloned_sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(cloned_sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(cloned_sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(cloned_sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(cloned_sparse_set.get(key5), Some(&"46".to_string()));
     }
 
     // sparse set of strings with one item => check if contains => returns true
