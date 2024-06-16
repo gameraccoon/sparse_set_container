@@ -1037,4 +1037,28 @@ mod tests {
     fn sparse_set_with_zst_try_to_create_with_capacity_panics() {
         let _sparse_set: SparseSet<()> = SparseSet::with_capacity(10);
     }
+
+    // sparse set of static string => try to pass as a value with more generic lifetime => compiles
+    #[test]
+    fn sparse_set_of_static_string_try_to_pass_as_a_value_with_more_generic_lifetime_compiles() {
+        #[allow(clippy::needless_lifetimes)]
+        fn accepting_sparse_set_of_string_with_lifetime<'a>(_sparse_set: &SparseSet<&'a str>) {}
+
+        let sparse_set: SparseSet<&'static str> = SparseSet::new();
+        accepting_sparse_set_of_string_with_lifetime(&sparse_set);
+    }
+
+    // sparse set => is send => true
+    #[test]
+    fn sparse_set_is_send() {
+        fn is_send<T: Send>() {}
+        is_send::<SparseSet<i32>>();
+    }
+
+    // sparse set => is sync => true
+    #[test]
+    fn sparse_set_is_sync() {
+        fn is_sync<T: Sync>() {}
+        is_sync::<SparseSet<i32>>();
+    }
 }

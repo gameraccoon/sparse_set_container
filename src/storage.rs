@@ -433,3 +433,6 @@ impl<T> Drop for SparseArrayStorage<T> {
         }
     }
 }
+
+unsafe impl<T: Send> Send for SparseArrayStorage<T> {}
+unsafe impl<T: Sync> Sync for SparseArrayStorage<T> {}
