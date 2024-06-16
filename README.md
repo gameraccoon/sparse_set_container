@@ -105,6 +105,8 @@ The values captured to illustrate the difference between this SparseSet containe
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
 
+Or to build this table you can run `python tools/collect_benchmark_table.py` and then find the results in `bench_table.md`
+
 ### License
 
 Licensed under the MIT license: http://opensource.org/licenses/MIT
