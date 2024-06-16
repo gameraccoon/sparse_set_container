@@ -38,10 +38,10 @@ impl<T> SparseArrayStorage<T> {
 
     pub(crate) fn new() -> Self {
         Self {
-            dense_values_start_ptr: std::ptr::null_mut(),
-            dense_keys_start_ptr: std::ptr::null_mut(),
+            dense_values_start_ptr: std::ptr::NonNull::dangling().as_ptr(),
+            dense_keys_start_ptr: std::ptr::NonNull::dangling().as_ptr(),
             dense_len: 0,
-            sparse_start_ptr: std::ptr::null_mut(),
+            sparse_start_ptr: std::ptr::NonNull::dangling().as_ptr(),
             sparse_len: 0,
 
             max_dense_elements: 0,
@@ -277,44 +277,26 @@ impl<T> SparseArrayStorage<T> {
     }
 
     pub(crate) fn get_dense_values(&self) -> &[T] {
-        if self.dense_len == 0 {
-            return &[];
-        }
         unsafe { std::slice::from_raw_parts(self.dense_values_start_ptr, self.dense_len) }
     }
 
     pub(crate) fn get_dense_values_mut(&mut self) -> &mut [T] {
-        if self.dense_len == 0 {
-            return &mut [];
-        }
         unsafe { std::slice::from_raw_parts_mut(self.dense_values_start_ptr, self.dense_len) }
     }
 
     pub(crate) fn get_dense_keys(&self) -> &[SparseKey] {
-        if self.dense_len == 0 {
-            return &[];
-        }
         unsafe { std::slice::from_raw_parts(self.dense_keys_start_ptr, self.dense_len) }
     }
 
     pub(crate) fn get_dense_keys_mut(&mut self) -> &mut [SparseKey] {
-        if self.dense_len == 0 {
-            return &mut [];
-        }
         unsafe { std::slice::from_raw_parts_mut(self.dense_keys_start_ptr, self.dense_len) }
     }
 
     pub(crate) fn get_sparse(&self) -> &[SparseEntry] {
-        if self.sparse_len == 0 {
-            return &[];
-        }
         unsafe { std::slice::from_raw_parts(self.sparse_start_ptr, self.sparse_len) }
     }
 
     pub(crate) fn get_sparse_mut(&mut self) -> &mut [SparseEntry] {
-        if self.sparse_len == 0 {
-            return &mut [];
-        }
         unsafe { std::slice::from_raw_parts_mut(self.sparse_start_ptr, self.sparse_len) }
     }
 
