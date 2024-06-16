@@ -25,6 +25,8 @@ pub use sparse_key::SparseKey;
 /// value (e.g. 32 bytes per element on 64-bit systems).
 /// The memory consumption will also grow by 2 * sizeof(usize) per 2^(sizeof(usize) * 8) elements
 /// removed (e.g. 16 bytes per 18446744073709551616 elements removed on 64-bit systems).
+///
+/// ZST (zero-sized types) are not supported, trying to use them will result in a panic.
 #[derive(Clone)]
 pub struct SparseSet<T> {
     // storage of dense and sparse values
@@ -37,6 +39,10 @@ pub struct SparseSet<T> {
 impl<T> SparseSet<T> {
     /// Does not heap-allocate when created.
     pub fn new() -> Self {
+        assert!(
+            std::mem::size_of::<T>() > 0,
+            "Zero-sized types are not supported"
+        );
         Self {
             storage: storage::SparseArrayStorage::new(),
             next_free_sparse_entry: usize::MAX,
@@ -45,6 +51,10 @@ impl<T> SparseSet<T> {
 
     /// Creates a new SparseSet with allocated memory for the given number of elements.
     pub fn with_capacity(capacity: usize) -> Self {
+        assert!(
+            std::mem::size_of::<T>() > 0,
+            "Zero-sized types are not supported"
+        );
         Self {
             storage: storage::SparseArrayStorage::with_capacity(capacity),
             next_free_sparse_entry: usize::MAX,
@@ -1012,5 +1022,19 @@ mod tests {
         sparse_set.swap_remove(key);
 
         assert!(!sparse_set.contains(key));
+    }
+
+    // sparse set with ZST => try to create => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_zst_try_to_create_panics() {
+        let _sparse_set: SparseSet<()> = SparseSet::new();
+    }
+
+    // sparse set with ZST => try to create with capacity => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_zst_try_to_create_with_capacity_panics() {
+        let _sparse_set: SparseSet<()> = SparseSet::with_capacity(10);
     }
 }
