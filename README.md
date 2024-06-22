@@ -93,14 +93,14 @@ The values captured to illustrate the difference between this SparseSet containe
 | Benchmark | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` |
 | --- | --- | --- | ---|
 | Create empty | 0 ns ±0 | 0 ns ±0 | 1 ns ±0 |
-| Create with capacity | 17 ns ±0 | 16 ns ±0 | 32 ns ±0 |
-| Push 100 elements | 3,392 ns ±16 | 2,484 ns ±33 | 5,470 ns ±45 |
-| With capacity push 100 | 3,276 ns ±12 | 3,129 ns ±19 | 4,396 ns ±27 |
-| Lookup 100 elements | 90 ns ±1 | 40 ns ±7 | 464 ns ±13 |
+| Create with capacity | 17 ns ±0 | 16 ns ±0 | 33 ns ±1 |
+| Push 100 elements | 3,365 ns ±32 | 2,459 ns ±30 | 5,432 ns ±137 |
+| With capacity push 100 | 3,253 ns ±32 | 3,099 ns ±29 | 4,368 ns ±32 |
+| Lookup 100 elements | 88 ns ±0 | 41 ns ±4 | 464 ns ±3 |
 | Iterate over 100 elements | 30 ns ±0 | 30 ns ±1 | 41 ns ±1 |
-| Clone with 100 elements | 2,186 ns ±57 | 2,127 ns ±5 | 1,504 ns ±46 |
-| Clone 100 and remove 10 | 3,111 ns ±123 | 2,280 ns ±135 | 1,699 ns ±152 |
-| Clone 100 and swap_remove 10 | 2,500 ns ±240 | 2,118 ns ±123 | N/A |
+| Clone with 100 elements | 2,144 ns ±13 | 2,094 ns ±6 | 1,468 ns ±35 |
+| Clone 100 and remove 10 | 3,062 ns ±122 | 2,322 ns ±117 | 1,693 ns ±127 |
+| Clone 100 and swap_remove 10 | 2,434 ns ±93 | 2,171 ns ±102 | N/A |
 <!--benchmark table end-->
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
