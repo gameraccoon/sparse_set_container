@@ -1,11 +1,11 @@
 // Copyright (C) Pavel Grebnev 2024
 // Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 
-mod internal_types;
+mod sparse_entry;
 mod sparse_key;
 mod storage;
 
-use internal_types::{AliveSparseEntry, FreeSparseEntry, SparseEntry};
+use sparse_entry::SparseEntry;
 pub use sparse_key::SparseKey;
 
 /// A container based on Sparse Set, that stores a set of items and provides a way to efficiently
@@ -72,15 +72,12 @@ impl<T> SparseSet<T> {
         // if there are free entries in the sparse array, use one of them
         if self.next_free_sparse_entry != usize::MAX {
             let new_sparse_index = self.next_free_sparse_entry;
-            let free_sparse_entry = match &self.storage.get_sparse()[new_sparse_index] {
-                SparseEntry::FreeEntry(free_sparse_entry) => free_sparse_entry.clone(),
-                _ => unreachable!(),
-            };
-            self.next_free_sparse_entry = free_sparse_entry.next_free;
+            let free_sparse_entry = self.storage.get_sparse()[new_sparse_index];
+            self.next_free_sparse_entry = free_sparse_entry.next_free();
 
             let key = SparseKey {
                 sparse_index: new_sparse_index,
-                epoch: free_sparse_entry.next_epoch,
+                epoch: free_sparse_entry.next_epoch(),
             };
 
             self.storage.add_with_existing_sparse_item(key, value);
@@ -101,27 +98,22 @@ impl<T> SparseSet<T> {
         // in this case nothing is guaranteed anymore, we should panic
         debug_assert!(key.sparse_index < self.storage.get_sparse_mut().len());
 
-        return match self.storage.get_sparse()[key.sparse_index].clone() {
-            SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
-                let swapped_sparse_index = self.storage.get_dense_keys()
-                    [self.storage.get_dense_values().len() - 1]
-                    .sparse_index;
-                if let SparseEntry::AliveEntry(swapped_entry) =
-                    &mut self.storage.get_sparse_mut()[swapped_sparse_index]
-                {
-                    swapped_entry.dense_index = entry.dense_index;
-                } else {
-                    unreachable!();
-                }
+        let sparse_entry = self.storage.get_sparse_mut()[key.sparse_index];
+        if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
+            let swapped_sparse_index = self.storage.get_dense_keys()
+                [self.storage.get_dense_values().len() - 1]
+                .sparse_index;
+            self.storage.get_sparse_mut()[swapped_sparse_index]
+                .set_dense_index(sparse_entry.dense_index());
 
-                let removed_value = self.storage.swap_remove_dense(entry.dense_index);
+            let removed_value = self.storage.swap_remove_dense(sparse_entry.dense_index());
 
-                self.mark_as_free(key, entry);
-                Some(removed_value)
-            }
+            self.mark_as_free(key, sparse_entry);
+            Some(removed_value)
+        } else {
             // the element was already removed (either there's nothing, or a newer element)
-            _ => None,
-        };
+            None
+        }
     }
 
     /// Removes an element from the set using the key, keeping the order of elements.
@@ -131,29 +123,24 @@ impl<T> SparseSet<T> {
     pub fn remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        debug_assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse().len());
 
-        return match self.storage.get_sparse()[key.sparse_index].clone() {
-            SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
-                for i in entry.dense_index + 1..self.storage.get_dense_values().len() {
-                    let sparse_index = self.storage.get_dense_keys()[i].sparse_index;
-                    if let SparseEntry::AliveEntry(entry) =
-                        &mut self.storage.get_sparse_mut()[sparse_index]
-                    {
-                        entry.dense_index -= 1;
-                    } else {
-                        unreachable!();
-                    }
-                }
+        let sparse_entry = self.storage.get_sparse()[key.sparse_index];
+        if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
+            for i in sparse_entry.dense_index() + 1..self.storage.get_dense_values().len() {
+                let sparse_index = self.storage.get_dense_keys()[i].sparse_index;
 
-                let removed_value = self.storage.remove_dense(entry.dense_index);
-
-                self.mark_as_free(key, entry);
-                Some(removed_value)
+                self.storage.get_sparse_mut()[sparse_index].dense_index_move_left();
             }
+
+            let removed_value = self.storage.remove_dense(sparse_entry.dense_index());
+
+            self.mark_as_free(key, sparse_entry);
+            Some(removed_value)
+        } else {
             // the element was already removed (either there's nothing, or a newer element)
-            _ => None,
-        };
+            None
+        }
     }
 
     /// Swaps two elements in the set using their keys.
@@ -162,38 +149,28 @@ impl<T> SparseSet<T> {
     pub fn swap(&mut self, key1: SparseKey, key2: SparseKey) {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        debug_assert!(key1.sparse_index < self.storage.get_sparse().len());
-        debug_assert!(key2.sparse_index < self.storage.get_sparse().len());
+        assert!(key1.sparse_index < self.storage.get_sparse().len());
+        assert!(key2.sparse_index < self.storage.get_sparse().len());
 
-        match (
-            self.storage.get_sparse()[key1.sparse_index].clone(),
-            self.storage.get_sparse()[key2.sparse_index].clone(),
-        ) {
-            (SparseEntry::AliveEntry(entry1), SparseEntry::AliveEntry(entry2))
-                if entry1.epoch == key1.epoch && entry2.epoch == key2.epoch =>
-            {
-                self.storage
-                    .get_dense_values_mut()
-                    .swap(entry1.dense_index, entry2.dense_index);
-                self.storage
-                    .get_dense_keys_mut()
-                    .swap(entry1.dense_index, entry2.dense_index);
+        let sparse_entry1 = self.storage.get_sparse()[key1.sparse_index];
+        let sparse_entry2 = self.storage.get_sparse()[key2.sparse_index];
 
-                // swap the references in the sparse array
-                let sparse_array = self.storage.get_sparse_mut();
-                sparse_array[key1.sparse_index] = SparseEntry::AliveEntry(AliveSparseEntry {
-                    dense_index: entry2.dense_index,
-                    epoch: entry1.epoch,
-                });
-                sparse_array[key2.sparse_index] = SparseEntry::AliveEntry(AliveSparseEntry {
-                    dense_index: entry1.dense_index,
-                    epoch: entry2.epoch,
-                });
-            }
-            // either there's no element, or there's a newer element the value points to
-            _ => {
-                panic!("Cannot swap elements that are not alive");
-            }
+        if sparse_entry1.is_alive() && sparse_entry2.is_alive() {
+            self.storage
+                .get_dense_values_mut()
+                .swap(sparse_entry1.dense_index(), sparse_entry2.dense_index());
+            self.storage
+                .get_dense_keys_mut()
+                .swap(sparse_entry1.dense_index(), sparse_entry2.dense_index());
+
+            // swap the references in the sparse array
+            let sparse_array = self.storage.get_sparse_mut();
+            sparse_array[key1.sparse_index] =
+                SparseEntry::new_alive(sparse_entry2.dense_index(), sparse_entry1.epoch());
+            sparse_array[key2.sparse_index] =
+                SparseEntry::new_alive(sparse_entry1.dense_index(), sparse_entry2.epoch());
+        } else {
+            panic!("Cannot swap elements that are not alive");
         }
     }
 
@@ -204,14 +181,14 @@ impl<T> SparseSet<T> {
     pub fn get(&self, key: SparseKey) -> Option<&T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        debug_assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse().len());
 
-        match &self.storage.get_sparse()[key.sparse_index] {
-            SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
-                Some(&self.storage.get_dense_values()[entry.dense_index])
-            }
+        let sparse_entry = self.storage.get_sparse()[key.sparse_index];
+        if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
+            Some(&self.storage.get_dense_values()[sparse_entry.dense_index()])
+        } else {
             // either there's no element, or there's a newer element the value points to
-            _ => None,
+            None
         }
     }
 
@@ -222,14 +199,15 @@ impl<T> SparseSet<T> {
     pub fn get_mut(&mut self, key: SparseKey) -> Option<&mut T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        debug_assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse().len());
 
-        match self.storage.get_sparse()[key.sparse_index].clone() {
-            SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => {
-                Some(&mut self.storage.get_dense_values_mut()[entry.dense_index])
-            }
+        let sparse_entry = self.storage.get_sparse()[key.sparse_index];
+
+        if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
+            Some(&mut self.storage.get_dense_values_mut()[sparse_entry.dense_index()])
+        } else {
             // either there's no element, or there's a newer element the value points to
-            _ => None,
+            None
         }
     }
 
@@ -242,10 +220,8 @@ impl<T> SparseSet<T> {
             return false;
         }
 
-        match &self.storage.get_sparse()[key.sparse_index] {
-            SparseEntry::AliveEntry(entry) if entry.epoch == key.epoch => true,
-            _ => false,
-        }
+        let sparse_entry = self.storage.get_sparse()[key.sparse_index];
+        return sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch;
     }
 
     /// Returns the number of elements in the set.
@@ -289,11 +265,11 @@ impl<T> SparseSet<T> {
             .zip(self.storage.get_dense_values().iter())
     }
 
-    fn mark_as_free(&mut self, key: SparseKey, entry: AliveSparseEntry) {
-        self.storage.get_sparse_mut()[key.sparse_index] = SparseEntry::FreeEntry(FreeSparseEntry {
-            next_free: self.next_free_sparse_entry,
-            next_epoch: usize::wrapping_add(entry.epoch, 1),
-        });
+    fn mark_as_free(&mut self, key: SparseKey, entry: SparseEntry) {
+        self.storage.get_sparse_mut()[key.sparse_index] = SparseEntry::new_free(
+            self.next_free_sparse_entry,
+            usize::wrapping_add(entry.epoch(), 1),
+        );
 
         // as long as we have available epochs, we can reuse the sparse entry
         if key.epoch < usize::MAX {
@@ -913,15 +889,15 @@ mod tests {
         sparse_set.push("44".to_string());
 
         for (i, key) in sparse_set.keys().enumerate() {
-            if i == 0 {
-                let expected = "42".to_string();
-                assert_eq!(sparse_set.get(key), Some(&expected));
+            let expected = if i == 0 {
+                "42".to_string()
             } else if i == 1 {
-                let expected = "43".to_string();
-                assert_eq!(sparse_set.get(key), Some(&expected));
+                "43".to_string()
             } else {
-                assert_eq!(sparse_set.get(key), Some(&"44".to_string()));
-            }
+                "44".to_string()
+            };
+
+            assert_eq!(sparse_set.get(key), Some(&expected));
         }
     }
 

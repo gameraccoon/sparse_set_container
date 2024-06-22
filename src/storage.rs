@@ -1,7 +1,7 @@
-use crate::internal_types;
+use crate::sparse_entry;
 use crate::sparse_key;
 
-use internal_types::{AliveSparseEntry, SparseEntry};
+use sparse_entry::SparseEntry;
 use sparse_key::SparseKey;
 
 /// SparseArrayStorage is a storage for sparse set, it is a combination of dense and sparse arrays.
@@ -87,10 +87,7 @@ impl<T> SparseArrayStorage<T> {
             sparse_index: old_sparse_len,
             epoch: 0,
         };
-        let new_sparse_entry = SparseEntry::AliveEntry(AliveSparseEntry {
-            dense_index: old_dense_len,
-            epoch: 0,
-        });
+        let new_sparse_entry = SparseEntry::new_alive(old_dense_len, 0);
 
         if let Some(previous_layout) = self.layout {
             // check if we need to reallocate the buffer
@@ -205,10 +202,7 @@ impl<T> SparseArrayStorage<T> {
 
         unsafe {
             let sparse_entry = self.sparse_start_ptr.add(key.sparse_index);
-            *sparse_entry = SparseEntry::AliveEntry(AliveSparseEntry {
-                dense_index,
-                epoch: key.epoch,
-            });
+            *sparse_entry = SparseEntry::new_alive(dense_index, key.epoch);
         }
     }
 
