@@ -8,6 +8,8 @@ mod storage;
 pub use sparse_key::SparseKey;
 
 use sparse_entry::SparseEntry;
+use sparse_entry::MAX_EPOCH;
+use sparse_entry::MAX_SPARSE_INDEX;
 
 /// A container based on Sparse Set, that stores a set of items and provides a way to efficiently
 /// access them by a generated key.
@@ -50,7 +52,7 @@ impl<T> SparseSet<T> {
         );
         Self {
             storage: storage::SparseArrayStorage::new(),
-            next_free_sparse_entry: usize::MAX,
+            next_free_sparse_entry: MAX_SPARSE_INDEX,
         }
     }
 
@@ -67,7 +69,7 @@ impl<T> SparseSet<T> {
         );
         Self {
             storage: storage::SparseArrayStorage::with_capacity(capacity),
-            next_free_sparse_entry: usize::MAX,
+            next_free_sparse_entry: MAX_SPARSE_INDEX,
         }
     }
 
@@ -84,7 +86,7 @@ impl<T> SparseSet<T> {
     /// Panics if a memory allocation fails.
     pub fn push(&mut self, value: T) -> SparseKey {
         // if there are free entries in the sparse array, use one of them
-        if self.next_free_sparse_entry != usize::MAX {
+        if self.next_free_sparse_entry != MAX_SPARSE_INDEX {
             let new_sparse_index = self.next_free_sparse_entry;
             let free_sparse_entry = self.storage.get_sparse()[new_sparse_index];
             self.next_free_sparse_entry = free_sparse_entry.next_free();
@@ -311,7 +313,7 @@ impl<T> SparseSet<T> {
         );
 
         // as long as we have available epochs, we can reuse the sparse entry
-        if key.epoch < usize::MAX {
+        if key.epoch < MAX_EPOCH {
             self.next_free_sparse_entry = key.sparse_index;
         }
     }
