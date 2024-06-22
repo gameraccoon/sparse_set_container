@@ -401,6 +401,36 @@ mod tests {
         assert_eq!(sparse_set.get(key), None);
     }
 
+    // sparse set with one item => add second item and remove first item => only second item remains
+    #[test]
+    fn sparse_set_with_one_item_add_second_item_and_remove_first_item_only_second_item_remains() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.remove(key1);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with one item => remove item and add two new items => has two items
+    #[test]
+    fn sparse_set_with_one_item_remove_item_and_add_two_new_items_has_two_items() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+
+        sparse_set.remove(key1);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        assert_eq!(sparse_set.size(), 2);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+    }
+
     // sparse set with two items => remove first item => has one item
     #[test]
     fn sparse_set_with_two_items_remove_first_item_has_one_item() {
