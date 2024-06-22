@@ -369,7 +369,7 @@ where
         let new_sparse_start_ptr = unsafe { buffer.add(sparse_offset) as *mut SparseEntry };
 
         unsafe {
-            // copy invoking clone on the elements don't have Copy trait
+            // copy by invoking clone on the elements that don't have Copy trait
             if std::mem::needs_drop::<T>() {
                 for i in 0..self.dense_len {
                     std::ptr::write(

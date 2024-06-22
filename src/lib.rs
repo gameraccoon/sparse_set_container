@@ -598,6 +598,18 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
 
+    // sparse set with one item => try swapping with itself => does nothing
+    #[test]
+    fn sparse_set_with_one_item_try_swapping_with_itself_does_nothing() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key = sparse_set.push(42);
+
+        sparse_set.swap(key, key);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
     // sparse set with five items => clone the set => cloned set has the same items
     #[test]
     fn sparse_set_with_five_items_clone_the_set_cloned_set_has_the_same_items() {
@@ -636,6 +648,76 @@ mod tests {
         sparse_set.swap_remove(key);
 
         assert!(!sparse_set.contains(key));
+    }
+
+    // sparse set with two items => remove item and try to swap it => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_two_items_remove_item_and_try_to_swap_it_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.remove(key1);
+        sparse_set.swap(key1, key2);
+    }
+
+    // two sparse sets with different sizes => try to access non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_with_different_sizes_try_to_access_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<i32> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push(42);
+
+        let sparse_set2: SparseSet<i32> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.get(key1);
+    }
+
+    // two sparse sets with different sizes => try to remove non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_with_different_sizes_try_to_remove_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<i32> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push(42);
+
+        let mut sparse_set2: SparseSet<i32> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.remove(key1);
+    }
+
+    // two sparse sets with different sizes => try to swap_remove non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_with_different_sizes_try_to_swap_remove_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<i32> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push(42);
+
+        let mut sparse_set2: SparseSet<i32> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.swap_remove(key1);
+    }
+
+    // two sparse sets with different sizes => try to swap non-existent keys => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_with_different_sizes_try_to_swap_non_existent_keys_panics() {
+        let mut sparse_set1: SparseSet<i32> = SparseSet::with_capacity(1);
+        sparse_set1.push(42);
+        let key2 = sparse_set1.push(43);
+
+        let mut sparse_set2: SparseSet<i32> = SparseSet::new();
+        let key3 = sparse_set2.push(44);
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.swap(key2, key3);
     }
 
     // empty sparse set of strings => created => no items
@@ -960,6 +1042,18 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
     }
 
+    // sparse set of strings with one item => try swapping with itself => does nothing
+    #[test]
+    fn sparse_set_of_strings_with_one_item_try_swapping_with_itself_does_nothing() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.swap(key, key);
+
+        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
     // sparse set of strings with five items => clone the set => cloned set has the same items
     #[test]
     fn sparse_set_of_strings_with_five_items_clone_the_set_cloned_set_has_the_same_items() {
@@ -998,6 +1092,76 @@ mod tests {
         sparse_set.swap_remove(key);
 
         assert!(!sparse_set.contains(key));
+    }
+
+    // sparse set with two strings => remove item and try to swap it => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_two_strings_remove_item_and_try_to_swap_it_panics() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.remove(key1);
+        sparse_set.swap(key1, key2);
+    }
+
+    // two sparse sets of strings with different sizes => try to access non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_of_strings_with_different_sizes_try_to_access_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<String> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push("42".to_string());
+
+        let sparse_set2: SparseSet<String> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.get(key1);
+    }
+
+    // two sparse sets of strings with different sizes => try to remove non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_of_strings_with_different_sizes_try_to_remove_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<String> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push("42".to_string());
+
+        let mut sparse_set2: SparseSet<String> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.remove(key1);
+    }
+
+    // two sparse sets of strings with different sizes => try to swap_remove non-existent key => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_of_strings_with_different_sizes_try_to_swap_remove_non_existent_key_panics() {
+        let mut sparse_set1: SparseSet<String> = SparseSet::with_capacity(1);
+        let key1 = sparse_set1.push("42".to_string());
+
+        let mut sparse_set2: SparseSet<String> = SparseSet::new();
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.swap_remove(key1);
+    }
+
+    // two sparse sets of strings with different sizes => try to swap non-existent keys => panics
+    #[test]
+    #[should_panic]
+    fn two_sparse_sets_of_strings_with_different_sizes_try_to_swap_non_existent_keys_panics() {
+        let mut sparse_set1: SparseSet<String> = SparseSet::with_capacity(1);
+        sparse_set1.push("42".to_string());
+        let key2 = sparse_set1.push("43".to_string());
+
+        let mut sparse_set2: SparseSet<String> = SparseSet::new();
+        let key3 = sparse_set2.push("44".to_string());
+
+        // in this specific case it will panic to prevent UB
+        // however, in general, it's not guaranteed to panic
+        sparse_set2.swap(key2, key3);
     }
 
     // sparse set with ZST => try to create => panics
