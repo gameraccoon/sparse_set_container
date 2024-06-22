@@ -37,7 +37,11 @@ pub struct SparseSet<T> {
 
 #[allow(dead_code)]
 impl<T> SparseSet<T> {
-    /// Does not heap-allocate when created.
+    /// Creates a new SparseSet. Does not allocate.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the type `T` is zero-sized.
     pub fn new() -> Self {
         assert!(
             std::mem::size_of::<T>() > 0,
@@ -50,6 +54,11 @@ impl<T> SparseSet<T> {
     }
 
     /// Creates a new SparseSet with allocated memory for the given number of elements.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if the type `T` is zero-sized.
+    /// - Panics if the memory allocation fails.
     pub fn with_capacity(capacity: usize) -> Self {
         assert!(
             std::mem::size_of::<T>() > 0,
@@ -68,6 +77,10 @@ impl<T> SparseSet<T> {
     /// If some objects were removed before, it will reclaim the previously freed space.
     ///
     /// O(1) amortized time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a memory allocation fails.
     pub fn push(&mut self, value: T) -> SparseKey {
         // if there are free entries in the sparse array, use one of them
         if self.next_free_sparse_entry != usize::MAX {
@@ -93,10 +106,14 @@ impl<T> SparseSet<T> {
     /// Returns the removed value if it was present in the set.
     ///
     /// O(1) time complexity, however changes the order of elements.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
     pub fn swap_remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        debug_assert!(key.sparse_index < self.storage.get_sparse_mut().len());
+        assert!(key.sparse_index < self.storage.get_sparse_mut().len());
 
         let sparse_entry = self.storage.get_sparse_mut()[key.sparse_index];
         if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
@@ -120,6 +137,10 @@ impl<T> SparseSet<T> {
     /// Returns the removed value if it was present in the set.
     ///
     /// O(n) time complexity, however doesn't change the order of elements.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
     pub fn remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
@@ -146,6 +167,11 @@ impl<T> SparseSet<T> {
     /// Swaps two elements in the set using their keys.
     ///
     /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if any of the keys are not present in the set (were removed)
+    /// - Can panic if the used keys are not from this SparseSet.
     pub fn swap(&mut self, key1: SparseKey, key2: SparseKey) {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
@@ -178,6 +204,10 @@ impl<T> SparseSet<T> {
     /// If the key is not valid, returns None.
     ///
     /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
     pub fn get(&self, key: SparseKey) -> Option<&T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
@@ -196,6 +226,10 @@ impl<T> SparseSet<T> {
     /// If the key is not valid, returns None.
     ///
     /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
     pub fn get_mut(&mut self, key: SparseKey) -> Option<&mut T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
@@ -214,6 +248,10 @@ impl<T> SparseSet<T> {
     /// Returns true if the key points to a valid element in the set.
     ///
     /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
     pub fn contains(&self, key: SparseKey) -> bool {
         if key.sparse_index >= self.storage.get_sparse().len() {
             debug_assert!(false, "The key is not valid for this SparseSet");

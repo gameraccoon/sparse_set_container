@@ -336,14 +336,13 @@ impl<T> SparseArrayStorage<T> {
             + (align_of_buffer - buffer_size_reminder) * (buffer_size_reminder != 0) as usize;
 
         let layout: Option<std::alloc::Layout>;
-        let buffer: *mut u8;
+        let mut buffer: *mut u8 = std::ptr::null_mut();
         unsafe {
             layout = std::alloc::Layout::from_size_align(size_of_buffer, align_of_buffer).ok();
             if let Some(layout) = layout {
                 buffer = std::alloc::alloc(layout);
-            } else {
-                buffer = std::ptr::null_mut();
             }
+            assert!(!buffer.is_null(), "Failed to allocate memory for SparseArrayStorage");
         }
 
         (layout, buffer, dense_keys_offset, sparse_offset)
