@@ -12,8 +12,8 @@ E.g. you have a list of elements in UI that the user can add and remove, but you
 <!--badge links start-->
 [crates.io shield]: https://img.shields.io/crates/v/sparse_set_container?label=latest
 [crates.io link]: https://crates.io/crates/sparse_set_container
-[docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version=1.1.0
-[docs.rs link]: https://docs.rs/sparse_set_container/1.1.0/sparse_set_container/
+[docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version=1.1.1
+[docs.rs link]: https://docs.rs/sparse_set_container/1.1.1/sparse_set_container/
 [shields.io download count]: https://img.shields.io/crates/d/sparse_set_container.svg
 <!--badge links end-->
 
@@ -93,14 +93,14 @@ The values captured to illustrate the difference between this SparseSet containe
 | Benchmark | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` |
 | --- | --- | --- | ---|
 | Create empty | 0 ns ±0 | 0 ns ±0 | 1 ns ±0 |
-| Create with capacity | 17 ns ±0 | 16 ns ±0 | 33 ns ±1 |
-| Push 100 elements | 3,365 ns ±32 | 2,459 ns ±30 | 5,432 ns ±137 |
-| With capacity push 100 | 3,253 ns ±32 | 3,099 ns ±29 | 4,368 ns ±32 |
-| Lookup 100 elements | 88 ns ±0 | 41 ns ±4 | 464 ns ±3 |
-| Iterate over 100 elements | 30 ns ±0 | 30 ns ±1 | 41 ns ±1 |
-| Clone with 100 elements | 2,144 ns ±13 | 2,094 ns ±6 | 1,468 ns ±35 |
-| Clone 100 and remove 10 | 3,062 ns ±122 | 2,322 ns ±117 | 1,693 ns ±127 |
-| Clone 100 and swap_remove 10 | 2,434 ns ±93 | 2,171 ns ±102 | N/A |
+| Create with capacity | 17 ns ±0 | 16 ns ±0 | 32 ns ±1 |
+| Push 100 elements | 3,254 ns ±14 | 2,553 ns ±23 | 5,493 ns ±85 |
+| With capacity push 100 | 3,286 ns ±30 | 3,156 ns ±106 | 4,388 ns ±21 |
+| Lookup 100 elements | 88 ns ±2 | 39 ns ±14 | 464 ns ±3 |
+| Iterate over 100 elements | 30 ns ±0 | 30 ns ±0 | 41 ns ±1 |
+| Clone with 100 elements | 2,184 ns ±23 | 2,109 ns ±4 | 1,490 ns ±32 |
+| Clone 100 and remove 10 | 3,055 ns ±107 | 2,364 ns ±97 | 1,692 ns ±145 |
+| Clone 100 and swap_remove 10 | 2,475 ns ±119 | 2,193 ns ±67 | N/A |
 <!--benchmark table end-->
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
