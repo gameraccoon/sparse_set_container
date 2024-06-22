@@ -5,8 +5,9 @@ mod sparse_entry;
 mod sparse_key;
 mod storage;
 
-use sparse_entry::SparseEntry;
 pub use sparse_key::SparseKey;
+
+use sparse_entry::SparseEntry;
 
 /// A container based on Sparse Set, that stores a set of items and provides a way to efficiently
 /// access them by a generated key.
@@ -1175,7 +1176,8 @@ mod tests {
     // two sparse sets of strings with different sizes => try to swap_remove non-existent key => panics
     #[test]
     #[should_panic]
-    fn two_sparse_sets_of_strings_with_different_sizes_try_to_swap_remove_non_existent_key_panics() {
+    fn two_sparse_sets_of_strings_with_different_sizes_try_to_swap_remove_non_existent_key_panics()
+    {
         let mut sparse_set1: SparseSet<String> = SparseSet::with_capacity(1);
         let key1 = sparse_set1.push("42".to_string());
 

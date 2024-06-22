@@ -342,7 +342,10 @@ impl<T> SparseArrayStorage<T> {
             if let Some(layout) = layout {
                 buffer = std::alloc::alloc(layout);
             }
-            assert!(!buffer.is_null(), "Failed to allocate memory for SparseArrayStorage");
+            assert!(
+                !buffer.is_null(),
+                "Failed to allocate memory for SparseArrayStorage"
+            );
         }
 
         (layout, buffer, dense_keys_offset, sparse_offset)
