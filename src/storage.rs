@@ -53,6 +53,10 @@ impl<T> SparseArrayStorage<T> {
     }
 
     pub(crate) fn with_capacity(capacity: usize) -> Self {
+        if capacity == 0 {
+            return Self::new();
+        }
+
         let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
             std::mem::size_of::<T>(),
             std::mem::align_of::<T>(),

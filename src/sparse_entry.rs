@@ -7,8 +7,8 @@
 ///   - `dense_index_or_next_free` is the next free entry.
 ///   - `epoch_or_next_epoch` is the next epoch.
 ///
-/// The index in the free entry is offset by size_of::<usize>() / 2
-/// The upper bit is used to differentiate between alive and free entries.
+/// The index in the free entry has the upper bit set to 1, that upper bit is used to
+/// differentiate between alive and free entries.
 #[derive(Copy, Clone)]
 pub(crate) struct SparseEntry {
     /// alive: dense_index, free: next_free
