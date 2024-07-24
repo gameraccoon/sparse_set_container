@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use thunderdome::Arena as ThunderdomeArena;
 use generational_arena::Arena as GenerationalArena;
 use slotmap::SlotMap;
-use slab::Slab;
+use slotmap::DenseSlotMap;
 
 // 100 random indexes
 static INDEXES: [usize; 100] = [
@@ -57,15 +57,15 @@ fn create_empty_generational_arena(b: &mut Bencher) {
 
 fn create_empty_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let map = SlotMap::<slotmap::DefaultKey, String>::new();
+        let map = SlotMap::<_, String>::new();
         black_box(&map);
     });
 }
 
-fn create_empty_slab(b: &mut Bencher) {
+fn create_empty_dense_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let slab = Slab::<String>::new();
-        black_box(&slab);
+        let map = DenseSlotMap::<_, String>::new();
+        black_box(&map);
     });
 }
 
@@ -106,15 +106,15 @@ fn create_with_capacity_generational_arena(b: &mut Bencher) {
 
 fn create_with_capacity_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let map = SlotMap::<slotmap::DefaultKey, String>::with_capacity(1000);
+        let map = SlotMap::<_, String>::with_capacity(1000);
         black_box(&map);
     });
 }
 
-fn create_with_capacity_slab(b: &mut Bencher) {
+fn create_with_capacity_dense_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let slab = Slab::<String>::with_capacity(1000);
-        black_box(&slab);
+        let map = DenseSlotMap::<_, String>::with_capacity(1000);
+        black_box(&map);
     });
 }
 
@@ -170,7 +170,7 @@ fn push_hundred_elements_generational_arena(b: &mut Bencher) {
 
 fn push_hundred_elements_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let mut map = SlotMap::<slotmap::DefaultKey, String>::new();
+        let mut map = SlotMap::<_, String>::new();
         for i in INDEXES.iter() {
             map.insert(i.to_string());
         }
@@ -178,13 +178,13 @@ fn push_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn push_hundred_elements_slab(b: &mut Bencher) {
+fn push_hundred_elements_dense_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let mut slab = Slab::<String>::new();
+        let mut map = DenseSlotMap::<_, String>::new();
         for i in INDEXES.iter() {
-            slab.insert(i.to_string());
+            map.insert(i.to_string());
         }
-        black_box(&slab);
+        black_box(&map);
     });
 }
 
@@ -240,7 +240,7 @@ fn create_with_capacity_and_push_hundred_elements_generational_arena(b: &mut Ben
 
 fn create_with_capacity_and_push_hundred_elements_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let mut map = SlotMap::<slotmap::DefaultKey, String>::with_capacity(100);
+        let mut map = SlotMap::<_, String>::with_capacity(100);
         for i in INDEXES.iter() {
             map.insert(i.to_string());
         }
@@ -248,13 +248,13 @@ fn create_with_capacity_and_push_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn create_with_capacity_and_push_hundred_elements_slab(b: &mut Bencher) {
+fn create_with_capacity_and_push_hundred_elements_dense_slot_map(b: &mut Bencher) {
     b.iter(|| {
-        let mut slab = Slab::<String>::with_capacity(100);
+        let mut map = DenseSlotMap::<_, String>::with_capacity(100);
         for i in INDEXES.iter() {
-            slab.insert(i.to_string());
+            map.insert(i.to_string());
         }
-        black_box(&slab);
+        black_box(&map);
     });
 }
 
@@ -330,7 +330,7 @@ fn get_hundred_elements_generational_arena(b: &mut Bencher) {
 }
 
 fn get_hundred_elements_slot_map(b: &mut Bencher) {
-    let mut map = SlotMap::<slotmap::DefaultKey, String>::new();
+    let mut map = SlotMap::<_, String>::new();
     let mut keys = Vec::new();
     for i in INDEXES.iter() {
         keys.push(map.insert(i.to_string()));
@@ -344,17 +344,17 @@ fn get_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn get_hundred_elements_slab(b: &mut Bencher) {
-    let mut slab = Slab::<String>::new();
+fn get_hundred_elements_dense_slot_map(b: &mut Bencher) {
+    let mut map = DenseSlotMap::<_, String>::new();
     let mut keys = Vec::new();
     for i in INDEXES.iter() {
-        keys.push(slab.insert(i.to_string()));
+        keys.push(map.insert(i.to_string()));
     }
     black_box(&mut keys);
-    black_box(&mut slab);
+    black_box(&mut map);
     b.iter(|| {
         for i in INDEXES.iter() {
-            black_box(&slab[keys[*i]]);
+            black_box(&map[keys[*i]]);
         }
     });
 }
@@ -425,7 +425,7 @@ fn iterate_over_hundred_elements_generational_arena(b: &mut Bencher) {
 }
 
 fn iterate_over_hundred_elements_slot_map(b: &mut Bencher) {
-    let mut map = SlotMap::<slotmap::DefaultKey, String>::new();
+    let mut map = SlotMap::<_, String>::new();
     for i in INDEXES.iter() {
         map.insert(i.to_string());
     }
@@ -437,14 +437,14 @@ fn iterate_over_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn iterate_over_hundred_elements_slab(b: &mut Bencher) {
-    let mut slab = Slab::<String>::new();
+fn iterate_over_hundred_elements_dense_slot_map(b: &mut Bencher) {
+    let mut map = DenseSlotMap::<_, String>::new();
     for i in INDEXES.iter() {
-        slab.insert(i.to_string());
+        map.insert(i.to_string());
     }
-    black_box(&mut slab);
+    black_box(&mut map);
     b.iter(|| {
-        for element in slab.iter() {
+        for element in map.values() {
             black_box(element);
         }
     });
@@ -511,7 +511,7 @@ fn clone_with_hundred_elements_generational_arena(b: &mut Bencher) {
 }
 
 fn clone_with_hundred_elements_slot_map(b: &mut Bencher) {
-    let mut map = SlotMap::<slotmap::DefaultKey, String>::new();
+    let mut map = SlotMap::<_, String>::new();
     for i in INDEXES.iter() {
         map.insert(i.to_string());
     }
@@ -522,14 +522,14 @@ fn clone_with_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn clone_with_hundred_elements_slab(b: &mut Bencher) {
-    let mut slab = Slab::<String>::new();
+fn clone_with_hundred_elements_dense_slot_map(b: &mut Bencher) {
+    let mut map = DenseSlotMap::<_, String>::new();
     for i in INDEXES.iter() {
-        slab.insert(i.to_string());
+        map.insert(i.to_string());
     }
-    black_box(&mut slab);
+    black_box(&mut map);
     b.iter(|| {
-        let cloned = slab.clone();
+        let cloned = map.clone();
         black_box(&cloned);
     });
 }
@@ -616,7 +616,7 @@ fn clone_and_remove_ten_out_of_hundred_elements_generational_arena(b: &mut Bench
 }
 
 fn clone_and_remove_ten_out_of_hundred_elements_slot_map(b: &mut Bencher) {
-    let mut map = SlotMap::<slotmap::DefaultKey, String>::new();
+    let mut map = SlotMap::<_, String>::new();
     let mut keys = Vec::new();
     for i in INDEXES.iter() {
         keys.push(map.insert(i.to_string()));
@@ -632,15 +632,15 @@ fn clone_and_remove_ten_out_of_hundred_elements_slot_map(b: &mut Bencher) {
     });
 }
 
-fn clone_and_remove_ten_out_of_hundred_elements_slab(b: &mut Bencher) {
-    let mut slab = Slab::<String>::new();
+fn clone_and_remove_ten_out_of_hundred_elements_dense_slot_map(b: &mut Bencher) {
+    let mut map = DenseSlotMap::<_, String>::new();
     let mut keys = Vec::new();
     for i in INDEXES.iter() {
-        keys.push(slab.insert(i.to_string()));
+        keys.push(map.insert(i.to_string()));
     }
     black_box(&mut keys);
     b.iter(|| {
-        let mut cloned = slab.clone();
+        let mut cloned = map.clone();
         black_box(&mut cloned);
         for i in REMOVABLE_INDEXES.iter() {
             cloned.remove(keys[*i]);
@@ -689,56 +689,56 @@ benchmark_group!(
     create_empty_thunderdome_arena,
     create_empty_generational_arena,
     create_empty_slot_map,
-    create_empty_slab,
+    create_empty_dense_slot_map,
     create_with_capacity_sparse_set,
     create_with_capacity_vec,
     create_with_capacity_hash_map,
     create_with_capacity_thunderdome_arena,
     create_with_capacity_generational_arena,
     create_with_capacity_slot_map,
-    create_with_capacity_slab,
+    create_with_capacity_dense_slot_map,
     push_hundred_elements_sparse_set,
     push_hundred_elements_vec,
     push_hundred_elements_hash_map,
     push_hundred_elements_thunderdome_arena,
     push_hundred_elements_generational_arena,
     push_hundred_elements_slot_map,
-    push_hundred_elements_slab,
+    push_hundred_elements_dense_slot_map,
     create_with_capacity_and_push_hundred_elements_sparse_set,
     create_with_capacity_and_push_hundred_elements_vec,
     create_with_capacity_and_push_hundred_elements_hash_map,
     create_with_capacity_and_push_hundred_elements_thunderdome_arena,
     create_with_capacity_and_push_hundred_elements_generational_arena,
     create_with_capacity_and_push_hundred_elements_slot_map,
-    create_with_capacity_and_push_hundred_elements_slab,
+    create_with_capacity_and_push_hundred_elements_dense_slot_map,
     get_hundred_elements_sparse_set,
     get_hundred_elements_vec,
     get_hundred_elements_hash_map,
     get_hundred_elements_thunderdome_arena,
     get_hundred_elements_generational_arena,
     get_hundred_elements_slot_map,
-    get_hundred_elements_slab,
+    get_hundred_elements_dense_slot_map,
     iterate_over_hundred_elements_sparse_set,
     iterate_over_hundred_elements_vec,
     iterate_over_hundred_elements_hash_map,
     iterate_over_hundred_elements_thunderdome_arena,
     iterate_over_hundred_elements_generational_arena,
     iterate_over_hundred_elements_slot_map,
-    iterate_over_hundred_elements_slab,
+    iterate_over_hundred_elements_dense_slot_map,
     clone_with_hundred_elements_sparse_set,
     clone_with_hundred_elements_vec,
     clone_with_hundred_elements_hash_map,
     clone_with_hundred_elements_thunderdome_arena,
     clone_with_hundred_elements_generational_arena,
     clone_with_hundred_elements_slot_map,
-    clone_with_hundred_elements_slab,
+    clone_with_hundred_elements_dense_slot_map,
     clone_and_remove_ten_out_of_hundred_elements_sparse_set,
     clone_and_remove_ten_out_of_hundred_elements_vec,
     clone_and_remove_ten_out_of_hundred_elements_hash_map,
     clone_and_remove_ten_out_of_hundred_elements_thunderdome_arena,
     clone_and_remove_ten_out_of_hundred_elements_generational_arena,
     clone_and_remove_ten_out_of_hundred_elements_slot_map,
-    clone_and_remove_ten_out_of_hundred_elements_slab,
+    clone_and_remove_ten_out_of_hundred_elements_dense_slot_map,
     clone_and_swap_remove_ten_out_of_hundred_elements_sparse_set,
     clone_and_swap_remove_ten_out_of_hundred_elements_vec,
 );

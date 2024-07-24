@@ -27,12 +27,12 @@ benchmark_groups = [
         'suffix': '_generational_arena'
     },
     {
-        'name': 'slotmap::SlotMap<slotmap::DefaultKey, String>',
+        'name': 'slotmap::SlotMap<_, String>',
         'suffix': '_slot_map'
     },
     {
-        'name': 'slab::Slab<String>',
-        'suffix': '_slab'
+        'name': 'slotmap::DenseSlotMap<_, String>',
+        'suffix': '_dense_slot_map'
     }
 ]
 
@@ -42,7 +42,7 @@ benchmarks = [
         'benchmark_name': 'create_empty',
     },
     {
-        'name': 'Create with capacity',
+        'name': 'Create with capacity (1000)',
         'benchmark_name': 'create_with_capacity',
     },
     {
