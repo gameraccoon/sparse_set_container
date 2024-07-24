@@ -17,6 +17,22 @@ benchmark_groups = [
     {
         'name': 'HashMap<i32, String>',
         'suffix': '_hash_map'
+    },
+    {
+        'name': 'thunderdome::Arena<String>',
+        'suffix': '_thunderdome_arena'
+    },
+    {
+        'name': 'generational_arena::Arena<String>',
+        'suffix': '_generational_arena'
+    },
+    {
+        'name': 'slotmap::SlotMap<slotmap::DefaultKey, String>',
+        'suffix': '_slot_map'
+    },
+    {
+        'name': 'slab::Slab<String>',
+        'suffix': '_slab'
     }
 ]
 
