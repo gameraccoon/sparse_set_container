@@ -90,17 +90,17 @@ fn main() {
 The values captured to illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap:
 
 <!--benchmark table start-->
-| Benchmark | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` |
-| --- | --- | --- | ---|
-| Create empty | 0 ns ±0 | 0 ns ±0 | 1 ns ±0 |
-| Create with capacity | 17 ns ±0 | 16 ns ±0 | 32 ns ±1 |
-| Push 100 elements | 3,254 ns ±14 | 2,553 ns ±23 | 5,493 ns ±85 |
-| With capacity push 100 | 3,286 ns ±30 | 3,156 ns ±106 | 4,388 ns ±21 |
-| Lookup 100 elements | 88 ns ±2 | 39 ns ±14 | 464 ns ±3 |
-| Iterate over 100 elements | 30 ns ±0 | 30 ns ±0 | 41 ns ±1 |
-| Clone with 100 elements | 2,184 ns ±23 | 2,109 ns ±4 | 1,490 ns ±32 |
-| Clone 100 and remove 10 | 3,055 ns ±107 | 2,364 ns ±97 | 1,692 ns ±145 |
-| Clone 100 and swap_remove 10 | 2,475 ns ±119 | 2,193 ns ±67 | N/A |
+| Benchmark                    | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` | `thunderdome::Arena<String>` | `generational_arena::Arena<String>` | `slotmap::SlotMap<_, String>` | `slotmap::DenseSlotMap<_, String>` |
+|------------------------------|---------------------|---------------|------------------------|------------------------------|-------------------------------------|-------------------------------|------------------------------------|
+| Create empty                 | 0 ns ±0             | 0 ns ±0       | 2 ns ±0                | 0 ns ±0                      | 14 ns ±1                            | 7 ns ±0                       | 7 ns ±0                            |
+| Create with capacity (1000)  | 18 ns ±0            | 18 ns ±0      | 34 ns ±0               | 18 ns ±0                     | 653 ns ±5                           | 18 ns ±0                      | 49 ns ±0                           |
+| Push 100 elements            | 3,423 ns ±23        | 3,192 ns ±13  | 5,405 ns ±33           | 3,205 ns ±15                 | 3,335 ns ±13                        | 3,198 ns ±22                  | 3,862 ns ±33                       |
+| With capacity push 100       | 3,280 ns ±11        | 3,164 ns ±29  | 4,350 ns ±20           | 3,199 ns ±35                 | 3,136 ns ±10                        | 3,146 ns ±17                  | 3,309 ns ±17                       |
+| Lookup 100 elements          | 88 ns ±0            | 41 ns ±6      | 464 ns ±2              | 77 ns ±1                     | 76 ns ±1                            | 64 ns ±1                      | 85 ns ±3                           |
+| Iterate over 100 elements    | 30 ns ±0            | 30 ns ±0      | 41 ns ±1               | 73 ns ±0                     | 69 ns ±0                            | 36 ns ±0                      | 33 ns ±0                           |
+| Clone with 100 elements      | 2,422 ns ±48        | 2,352 ns ±11  | 1,522 ns ±38           | 2,403 ns ±19                 | 2,460 ns ±17                        | 2,425 ns ±41                  | 2,442 ns ±16                       |
+| Clone 100 and remove 10      | 3,183 ns ±78        | 2,408 ns ±53  | 1,673 ns ±99           | 2,516 ns ±66                 | 2,581 ns ±77                        | 2,553 ns ±72                  | 2,514 ns ±52                       |
+| Clone 100 and swap_remove 10 | 2,510 ns ±61        | 2,229 ns ±35  | N/A                    | N/A                          | N/A                                 | N/A                           | N/A                                |
 <!--benchmark table end-->
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
