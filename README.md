@@ -1,7 +1,7 @@
 # Sparse Set Container
 A container based on a sparse set.
 
-It is useful if you want a container with performance close to Vec but you also want to safely store the indexes to the elements (so that they are not invalidated on removals).  
+It is useful if you want a container with performance close to Vec but also to safely store the indexes to the elements (so that they are not invalidated on removals).  
 E.g. you have a list of elements in UI that the user can add and remove, but you want to refer to the elements of that list from somewhere else.
 
 [![crates.io][crates.io shield]][crates.io link]
@@ -39,7 +39,7 @@ An array-like container based on sparse set implementation that allows O(1) acce
 | remove    | O(n)      | O(n)    |
 | swap_remove | O(1)    | O(1)    |
 
-For iterating over the elements SparseSet exposes an iterator over an internal Vec with values, which is as efficient as iterating over a Vec directly.
+For iterating over the elements SparseSet exposes an iterator over a tightly packed slice with values, which is as efficient as iterating over a Vec.
 
 Differences to Vec:
 - Instead of using indexes, when adding an element, it returns a lightweight key structure that can be used to access the element later
@@ -87,7 +87,7 @@ fn main() {
 <!--readme_example.rs end-->
 ### Benchmarks
 
-The values captured to illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap:
+The values captured illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap, as well as comparing to other libraries with similar functionality.
 
 <!--benchmark table start-->
 | Benchmark                    | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` | `thunderdome::Arena<String>` | `generational_arena::Arena<String>` | `slotmap::SlotMap<_, String>` | `slotmap::DenseSlotMap<_, String>` |
