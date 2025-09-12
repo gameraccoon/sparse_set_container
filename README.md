@@ -92,15 +92,15 @@ The values captured illustrate the difference between this SparseSet container i
 <!--benchmark table start-->
 | Benchmark                    | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` | `thunderdome::Arena<String>` | `generational_arena::Arena<String>` | `slotmap::SlotMap<_, String>` | `slotmap::DenseSlotMap<_, String>` |
 |------------------------------|---------------------|---------------|------------------------|------------------------------|-------------------------------------|-------------------------------|------------------------------------|
-| Create empty                 | 0 ns ±0             | 0 ns ±0       | 2 ns ±0                | 0 ns ±0                      | 14 ns ±1                            | 7 ns ±0                       | 7 ns ±0                            |
-| Create with capacity (1000)  | 18 ns ±0            | 18 ns ±0      | 34 ns ±0               | 18 ns ±0                     | 653 ns ±5                           | 18 ns ±0                      | 49 ns ±0                           |
-| Push 100 elements            | 3,423 ns ±23        | 3,192 ns ±13  | 5,405 ns ±33           | 3,205 ns ±15                 | 3,335 ns ±13                        | 3,198 ns ±22                  | 3,862 ns ±33                       |
-| With capacity push 100       | 3,280 ns ±11        | 3,164 ns ±29  | 4,350 ns ±20           | 3,199 ns ±35                 | 3,136 ns ±10                        | 3,146 ns ±17                  | 3,309 ns ±17                       |
-| Lookup 100 elements          | 88 ns ±0            | 41 ns ±6      | 464 ns ±2              | 77 ns ±1                     | 76 ns ±1                            | 64 ns ±1                      | 85 ns ±3                           |
-| Iterate over 100 elements    | 30 ns ±0            | 30 ns ±0      | 41 ns ±1               | 73 ns ±0                     | 69 ns ±0                            | 36 ns ±0                      | 33 ns ±0                           |
-| Clone with 100 elements      | 2,422 ns ±48        | 2,352 ns ±11  | 1,522 ns ±38           | 2,403 ns ±19                 | 2,460 ns ±17                        | 2,425 ns ±41                  | 2,442 ns ±16                       |
-| Clone 100 and remove 10      | 3,183 ns ±78        | 2,408 ns ±53  | 1,673 ns ±99           | 2,516 ns ±66                 | 2,581 ns ±77                        | 2,553 ns ±72                  | 2,514 ns ±52                       |
-| Clone 100 and swap_remove 10 | 2,510 ns ±61        | 2,229 ns ±35  | N/A                    | N/A                          | N/A                                 | N/A                           | N/A                                |
+| Create empty                 | 0 ns ±0             | 0 ns ±0       | 1 ns ±0                | 0 ns ±0                      | 14 ns ±0                            | 7 ns ±0                       | 7 ns ±1                            |
+| Create with capacity (1000)  | 19 ns ±0            | 18 ns ±0      | 35 ns ±3               | 18 ns ±0                     | 652 ns ±26                          | 18 ns ±0                      | 51 ns ±3                           |
+| Push 100 elements            | 3,520 ns ±96        | 3,322 ns ±212 | 5,307 ns ±341          | 3,457 ns ±220                | 3,501 ns ±226                       | 3,352 ns ±106                 | 3,974 ns ±201                      |
+| With capacity push 100       | 3,385 ns ±136       | 3,234 ns ±210 | 4,281 ns ±74           | 3,309 ns ±98                 | 3,210 ns ±70                        | 3,212 ns ±90                  | 3,377 ns ±102                      |
+| Lookup 100 elements          | 89 ns ±2            | 42 ns ±7      | 447 ns ±35             | 78 ns ±2                     | 78 ns ±2                            | 64 ns ±1                      | 86 ns ±3                           |
+| Iterate over 100 elements    | 30 ns ±1            | 32 ns ±2      | 42 ns ±1               | 93 ns ±2                     | 69 ns ±2                            | 36 ns ±1                      | 32 ns ±1                           |
+| Clone with 100 elements      | 2,476 ns ±76        | 2,411 ns ±73  | 1,538 ns ±58           | 2,449 ns ±86                 | 2,505 ns ±81                        | 2,472 ns ±74                  | 2,496 ns ±42                       |
+| Clone 100 and remove 10      | 3,215 ns ±117       | 2,454 ns ±52  | 1,678 ns ±112          | 2,539 ns ±85                 | 2,618 ns ±125                       | 2,585 ns ±86                  | 2,556 ns ±83                       |
+| Clone 100 and swap_remove 10 | 2,546 ns ±74        | 2,262 ns ±86  | N/A                    | N/A                          | N/A                                 | N/A                           | N/A                                |
 <!--benchmark table end-->
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
