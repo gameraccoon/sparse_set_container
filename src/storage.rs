@@ -305,6 +305,10 @@ impl<T> SparseArrayStorage<T> {
         self.dense_len
     }
 
+    pub(crate) fn get_sparse_len(&self) -> usize {
+        self.sparse_len
+    }
+
     fn allocate_new_buffer(
         size_of_value: usize,
         align_of_value: usize,

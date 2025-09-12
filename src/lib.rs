@@ -110,13 +110,12 @@ impl<T> SparseSet<T> {
     pub fn swap_remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.storage.get_sparse_mut().len());
+        assert!(key.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry = self.storage.get_sparse_mut()[key.sparse_index];
         if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
-            let swapped_sparse_index = self.storage.get_dense_keys()
-                [self.storage.get_dense_values().len() - 1]
-                .sparse_index;
+            let swapped_sparse_index =
+                self.storage.get_dense_keys()[self.storage.get_dense_len() - 1].sparse_index;
             self.storage.get_sparse_mut()[swapped_sparse_index]
                 .set_dense_index(sparse_entry.dense_index());
 
@@ -141,11 +140,11 @@ impl<T> SparseSet<T> {
     pub fn remove(&mut self, key: SparseKey) -> Option<T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry = self.storage.get_sparse()[key.sparse_index];
         if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
-            for i in sparse_entry.dense_index() + 1..self.storage.get_dense_values().len() {
+            for i in sparse_entry.dense_index() + 1..self.storage.get_dense_len() {
                 let sparse_index = self.storage.get_dense_keys()[i].sparse_index;
 
                 self.storage.get_sparse_mut()[sparse_index].dense_index_move_left();
@@ -172,8 +171,8 @@ impl<T> SparseSet<T> {
     pub fn swap(&mut self, key1: SparseKey, key2: SparseKey) {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key1.sparse_index < self.storage.get_sparse().len());
-        assert!(key2.sparse_index < self.storage.get_sparse().len());
+        assert!(key1.sparse_index < self.storage.get_sparse_len());
+        assert!(key2.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry1 = self.storage.get_sparse()[key1.sparse_index];
         let sparse_entry2 = self.storage.get_sparse()[key2.sparse_index];
@@ -260,7 +259,7 @@ impl<T> SparseSet<T> {
     pub fn get(&self, key: SparseKey) -> Option<&T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry = self.storage.get_sparse()[key.sparse_index];
         if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
@@ -282,7 +281,7 @@ impl<T> SparseSet<T> {
     pub fn get_mut(&mut self, key: SparseKey) -> Option<&mut T> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry = self.storage.get_sparse()[key.sparse_index];
 
@@ -302,7 +301,7 @@ impl<T> SparseSet<T> {
     ///
     /// Can panic if the used key is not from this SparseSet.
     pub fn contains(&self, key: SparseKey) -> bool {
-        if key.sparse_index >= self.storage.get_sparse().len() {
+        if key.sparse_index >= self.storage.get_sparse_len() {
             debug_assert!(false, "The key is not valid for this SparseSet");
             return false;
         }
@@ -356,7 +355,7 @@ impl<T> SparseSet<T> {
     pub fn index(&self, key: SparseKey) -> Option<usize> {
         // this can happen only if the key is from another SparseSet
         // in this case nothing is guaranteed anymore, we should panic
-        assert!(key.sparse_index < self.storage.get_sparse().len());
+        assert!(key.sparse_index < self.storage.get_sparse_len());
 
         let sparse_entry = self.storage.get_sparse()[key.sparse_index];
         if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
