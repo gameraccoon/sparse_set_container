@@ -1,3 +1,6 @@
+// Copyright (C) Pavel Grebnev 2024
+// Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+
 /// A sparse entry in the sparse set.
 /// Depending on the state of the entry, the fields have different meanings:
 /// - If the entry is alive:

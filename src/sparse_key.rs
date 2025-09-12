@@ -1,3 +1,6 @@
+// Copyright (C) Pavel Grebnev 2024
+// Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+
 /// A key that can be used to access elements in a SparseSet, the key is unique for each element,
 /// and it is only valid for the SparseSet it was created in.
 ///
