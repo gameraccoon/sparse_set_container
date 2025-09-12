@@ -293,6 +293,28 @@ impl<T> SparseSet<T> {
         self.storage.get_dense_keys().get(index).copied()
     }
 
+    /// Returns the index of an element with the given key.
+    /// If the key is not valid, returns None.
+    ///
+    /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Can panic if the used key is not from this SparseSet.
+    pub fn index(&self, key: SparseKey) -> Option<usize> {
+        // this can happen only if the key is from another SparseSet
+        // in this case nothing is guaranteed anymore, we should panic
+        assert!(key.sparse_index < self.storage.get_sparse().len());
+
+        let sparse_entry = self.storage.get_sparse()[key.sparse_index];
+        if sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch {
+            Some(sparse_entry.dense_index())
+        } else {
+            // either there's no element, or there's a newer element the value points to
+            None
+        }
+    }
+
     /// Returns an iterator over the key-value pairs of the set.
     ///
     /// Note that if you intend to iterate over key-values in time-critical code, it may be better
@@ -640,6 +662,32 @@ mod tests {
         assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get_key(0), None);
         assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set with three items => get index => the expected index is returned
+    #[test]
+    fn sparse_set_with_three_items_get_index_the_expected_index_is_returned() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        assert_eq!(sparse_set.index(key1), Some(0));
+        assert_eq!(sparse_set.index(key2), Some(1));
+        assert_eq!(sparse_set.index(key3), Some(2));
+    }
+
+    // sparse set with two items => remove item and get its index => returns None
+    #[test]
+    fn sparse_set_with_two_items_remove_item_and_get_its_index_returns_none() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.remove(key1);
+
+        assert_eq!(sparse_set.index(key1), None);
+        assert_eq!(sparse_set.index(key2), Some(0));
     }
 
     // sparse set with three items => iterate over values => the values are iterated in order
