@@ -301,6 +301,10 @@ impl<T> SparseArrayStorage<T> {
         unsafe { std::slice::from_raw_parts_mut(self.sparse_start_ptr, self.sparse_len) }
     }
 
+    pub(crate) fn get_dense_len(&self) -> usize {
+        self.dense_len
+    }
+
     fn allocate_new_buffer(
         size_of_value: usize,
         align_of_value: usize,

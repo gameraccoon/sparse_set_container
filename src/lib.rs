@@ -197,6 +197,58 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Rotate the elements in the range [start_index, end_index) to the left while keeping
+    /// the keys pointing to the same elements.
+    ///
+    /// O(n) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the indices are out of bounds or end_index is less than start_index.
+    pub fn rotate_left(&mut self, start_index: usize, end_index: usize, mid: usize) {
+        if start_index >= end_index {
+            panic!("start_index must be less than end_index");
+        }
+
+        if end_index > self.storage.get_dense_len() {
+            panic!("end_index must be less than the length of the SparseSet");
+        }
+
+        self.storage.get_dense_values_mut()[start_index..end_index].rotate_left(mid);
+        self.storage.get_dense_keys_mut()[start_index..end_index].rotate_left(mid);
+        // we assume that sparse and dense arrays were consistent before the rotation
+        // so we just project the values from the dense array of keys to the sparse array
+        for i in start_index..end_index {
+            self.project_dense_key_to_sparse(i);
+        }
+    }
+
+    /// Rotate the elements in the range [start_index, end_index) to the right while keeping
+    /// the keys pointing to the same elements.
+    ///
+    /// O(n) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the indices are out of bounds or end_index is less than start_index.
+    pub fn rotate_right(&mut self, start_index: usize, end_index: usize, k: usize) {
+        if start_index >= end_index {
+            panic!("start_index must be less than end_index");
+        }
+
+        if end_index > self.storage.get_dense_len() {
+            panic!("end_index must be less than the length of the SparseSet");
+        }
+
+        self.storage.get_dense_values_mut()[start_index..end_index].rotate_right(k);
+        self.storage.get_dense_keys_mut()[start_index..end_index].rotate_right(k);
+        // we assume that sparse and dense arrays were consistent before the rotation
+        // so we just project the values from the dense array of keys to the sparse array
+        for i in start_index..end_index {
+            self.project_dense_key_to_sparse(i);
+        }
+    }
+
     /// Returns a reference to the value stored at the given key.
     /// If the key is not valid, returns None.
     ///
@@ -263,7 +315,7 @@ impl<T> SparseSet<T> {
     ///
     /// O(1) time complexity.
     pub fn len(&self) -> usize {
-        self.storage.get_dense_values().len()
+        self.storage.get_dense_len()
     }
 
     /// Returns true if the set is empty.
@@ -337,6 +389,12 @@ impl<T> SparseSet<T> {
         if key.epoch < MAX_EPOCH {
             self.next_free_sparse_entry = key.sparse_index;
         }
+    }
+
+    fn project_dense_key_to_sparse(&mut self, dense_index: usize) {
+        let key = self.storage.get_dense_keys()[dense_index];
+        self.storage.get_sparse_mut()[key.sparse_index] =
+            SparseEntry::new_alive(dense_index, key.epoch)
     }
 }
 
@@ -915,6 +973,238 @@ mod tests {
         sparse_set2.swap(key2, key3);
     }
 
+    // sparse set with one item => rotate left => has that same item
+    #[test]
+    fn sparse_set_with_one_item_rotate_left_has_that_same_item() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key = sparse_set.push(42);
+
+        sparse_set.rotate_left(0, 1, 1);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // sparse set with two items => rotate left once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_two_items_rotate_left_once_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.rotate_left(0, 2, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with two items => rotate left twice => items return to the same positions
+    #[test]
+    fn sparse_set_with_two_items_rotate_left_twice_items_return_to_the_same_positions() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.rotate_left(0, 2, 2);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with three items => rotate left once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_three_items_rotate_left_once_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.rotate_left(0, 3, 1);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+    }
+
+    // sparse set with three items => rotate left twice => items change position with stable keys
+    #[test]
+    fn sparse_set_with_three_items_rotate_left_twice_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.rotate_left(0, 3, 2);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key3));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+    }
+
+    // sparse set with four items => rotate middle two left once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_four_items_rotate_middle_two_left_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+
+        sparse_set.rotate_left(1, 3, 1);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+    }
+
+    // sparse set with one item => rotate left out of bounds => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_one_item_rotate_left_out_of_bounds_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+
+        sparse_set.rotate_left(0, 2, 2);
+    }
+
+    // sparse set with one item => rotate right => has that same item
+    #[test]
+    fn sparse_set_with_one_item_rotate_right_has_that_same_item() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key = sparse_set.push(42);
+
+        sparse_set.rotate_right(0, 1, 1);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // sparse set with two items => rotate right once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_two_items_rotate_right_once_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.rotate_right(0, 2, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with two items => rotate right twice => items return to the same positions
+    #[test]
+    fn sparse_set_with_two_items_rotate_right_twice_items_return_to_the_same_positions() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.rotate_right(0, 2, 2);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with three items => rotate right once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_three_items_rotate_right_once_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.rotate_right(0, 3, 1);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key3));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+    }
+
+    // sparse set with three items => rotate right twice => items change position with stable keys
+    #[test]
+    fn sparse_set_with_three_items_rotate_right_twice_items_change_position_with_stable_keys() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.rotate_right(0, 3, 2);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+    }
+
+    // sparse set with four items => rotate middle two right once => items change position with stable keys
+    #[test]
+    fn sparse_set_with_four_items_rotate_middle_two_right_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+
+        sparse_set.rotate_right(1, 3, 1);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+    }
+
+    // sparse set with one item => rotate right out of bounds => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_one_item_rotate_right_out_of_bounds_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+
+        sparse_set.rotate_right(0, 2, 2);
+    }
+
     // empty sparse set of strings => created => no items
     #[test]
     fn empty_sparse_set_of_strings_created_no_items() {
@@ -1432,6 +1722,225 @@ mod tests {
         // in this specific case it will panic to prevent UB
         // however, in general, it's not guaranteed to panic
         sparse_set2.swap(key2, key3);
+    }
+
+    // sparse set of strings with one item => rotate left => has that same item
+    #[test]
+    fn sparse_set_of_strings_with_one_item_rotate_left_has_that_same_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.rotate_left(0, 1, 1);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with two items => rotate left once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_two_items_rotate_left_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.rotate_left(0, 2, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => rotate left twice => items return to the same positions
+    #[test]
+    fn sparse_set_of_strings_with_two_items_rotate_left_twice_items_return_to_the_same_positions() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.rotate_left(0, 2, 2);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with three items => rotate left once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_three_items_rotate_left_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.rotate_left(0, 3, 1);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with three items => rotate left twice => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_three_items_rotate_left_twice_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.rotate_left(0, 3, 2);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key3));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with four items => rotate middle two left once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_four_items_rotate_middle_two_left_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+
+        sparse_set.rotate_left(1, 3, 1);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+    }
+
+    // sparse set of strings with one item => rotate right => has that same item
+    #[test]
+    fn sparse_set_of_strings_with_one_item_rotate_right_has_that_same_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.rotate_right(0, 1, 1);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with two items => rotate right once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_two_items_rotate_right_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.rotate_right(0, 2, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with two items => rotate right twice => items return to the same positions
+    #[test]
+    fn sparse_set_of_strings_with_two_items_rotate_right_twice_items_return_to_the_same_positions()
+    {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.rotate_right(0, 2, 2);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with three items => rotate right once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_three_items_rotate_right_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.rotate_right(0, 3, 1);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key3));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with three items => rotate right twice => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_three_items_rotate_right_twice_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.rotate_right(0, 3, 2);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with four items => rotate middle two right once => items change position with stable keys
+    #[test]
+    fn sparse_set_of_strings_with_four_items_rotate_middle_two_right_once_items_change_position_with_stable_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+
+        sparse_set.rotate_right(1, 3, 1);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key2));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
     }
 
     // sparse set with ZST => try to create => panics
