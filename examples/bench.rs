@@ -2,12 +2,12 @@
 extern crate bencher;
 
 use bencher::{black_box, Bencher};
+use generational_arena::Arena as GenerationalArena;
+use slotmap::DenseSlotMap;
+use slotmap::SlotMap;
 use sparse_set_container::SparseSet;
 use std::collections::HashMap;
 use thunderdome::Arena as ThunderdomeArena;
-use generational_arena::Arena as GenerationalArena;
-use slotmap::SlotMap;
-use slotmap::DenseSlotMap;
 
 // 100 random indexes
 static INDEXES: [usize; 100] = [
