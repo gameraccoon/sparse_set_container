@@ -1416,14 +1416,14 @@ mod tests {
         accepting_sparse_set_of_string_with_lifetime(&sparse_set);
     }
 
-    // sparse set => is send => true
+    // sparse set => check is send => true
     #[test]
     fn sparse_set_is_send() {
         fn is_send<T: Send>() {}
         is_send::<SparseSet<i32>>();
     }
 
-    // sparse set => is sync => true
+    // sparse set => check is sync => true
     #[test]
     fn sparse_set_is_sync() {
         fn is_sync<T: Sync>() {}
