@@ -268,7 +268,7 @@ impl<T> SparseSet<T> {
     /// Returns the number of elements in the set.
     ///
     /// O(1) time complexity.
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.storage.get_dense_values().len()
     }
 
@@ -328,7 +328,7 @@ mod tests {
     fn empty_sparse_set_created_no_items() {
         let sparse_set: SparseSet<i32> = SparseSet::new();
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         for _ in sparse_set.values() {
             assert!(false);
         }
@@ -339,7 +339,7 @@ mod tests {
     fn empty_sparse_set_created_with_capacity_no_items() {
         let sparse_set: SparseSet<i32> = SparseSet::with_capacity(10);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         for _ in sparse_set.values() {
             assert!(false);
         }
@@ -352,7 +352,7 @@ mod tests {
 
         let key = sparse_set.push(42);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&42));
     }
 
@@ -363,7 +363,7 @@ mod tests {
 
         let key = sparse_set.push(42);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&42));
     }
 
@@ -375,7 +375,7 @@ mod tests {
 
         *sparse_set.get_mut(key).unwrap() = 43;
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&43));
     }
 
@@ -387,7 +387,7 @@ mod tests {
 
         sparse_set.remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -399,7 +399,7 @@ mod tests {
 
         sparse_set.swap_remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -412,7 +412,7 @@ mod tests {
 
         sparse_set.remove(key1);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
@@ -427,7 +427,7 @@ mod tests {
         let key2 = sparse_set.push(43);
         let key3 = sparse_set.push(44);
 
-        assert_eq!(sparse_set.size(), 2);
+        assert_eq!(sparse_set.len(), 2);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&43));
         assert_eq!(sparse_set.get(key3), Some(&44));
@@ -442,7 +442,7 @@ mod tests {
 
         sparse_set.remove(key1);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
@@ -456,7 +456,7 @@ mod tests {
 
         sparse_set.swap_remove(key1);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
@@ -470,7 +470,7 @@ mod tests {
 
         sparse_set.remove(key2);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), Some(&42));
         assert_eq!(sparse_set.get(key2), None);
     }
@@ -484,7 +484,7 @@ mod tests {
 
         sparse_set.swap_remove(key2);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), Some(&42));
         assert_eq!(sparse_set.get(key2), None);
     }
@@ -498,7 +498,7 @@ mod tests {
 
         let new_key = sparse_set.push(43);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), None);
         assert_eq!(sparse_set.get(new_key), Some(&43));
     }
@@ -512,7 +512,7 @@ mod tests {
 
         let new_key = sparse_set.push(43);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), None);
         assert_eq!(sparse_set.get(new_key), Some(&43));
     }
@@ -529,7 +529,7 @@ mod tests {
 
         sparse_set.remove(key1);
 
-        assert_eq!(sparse_set.size(), 4);
+        assert_eq!(sparse_set.len(), 4);
         for (i, value) in sparse_set.values().enumerate() {
             if i == 0 {
                 assert_eq!(value, &43);
@@ -557,7 +557,7 @@ mod tests {
         sparse_set.remove(key);
         sparse_set.remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -570,7 +570,7 @@ mod tests {
         sparse_set.swap_remove(key);
         sparse_set.swap_remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -644,7 +644,7 @@ mod tests {
             *value = 43;
         }
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&43));
     }
 
@@ -657,7 +657,7 @@ mod tests {
 
         sparse_set.swap(key1, key2);
 
-        assert_eq!(sparse_set.size(), 2);
+        assert_eq!(sparse_set.len(), 2);
         for (i, value) in sparse_set.values().enumerate() {
             if i == 0 {
                 assert_eq!(value, &43);
@@ -677,7 +677,7 @@ mod tests {
 
         sparse_set.swap(key, key);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&42));
     }
 
@@ -693,7 +693,7 @@ mod tests {
 
         let cloned_sparse_set = sparse_set.clone();
 
-        assert_eq!(cloned_sparse_set.size(), 5);
+        assert_eq!(cloned_sparse_set.len(), 5);
         assert_eq!(cloned_sparse_set.get(key1), Some(&42));
         assert_eq!(cloned_sparse_set.get(key2), Some(&43));
         assert_eq!(cloned_sparse_set.get(key3), Some(&44));
@@ -796,7 +796,7 @@ mod tests {
     fn empty_sparse_set_of_strings_created_no_items() {
         let sparse_set: SparseSet<String> = SparseSet::new();
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         for _ in sparse_set.values() {
             assert!(false);
         }
@@ -807,7 +807,7 @@ mod tests {
     fn empty_sparse_set_of_strings_created_with_capacity_no_items() {
         let sparse_set: SparseSet<String> = SparseSet::with_capacity(10);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         for _ in sparse_set.values() {
             assert!(false);
         }
@@ -821,7 +821,7 @@ mod tests {
 
         let key = sparse_set.push("42".to_string());
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&expected));
     }
 
@@ -832,7 +832,7 @@ mod tests {
 
         let key = sparse_set.push("42".to_string());
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
     }
 
@@ -844,7 +844,7 @@ mod tests {
 
         *sparse_set.get_mut(key).unwrap() = "43".to_string();
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
     }
 
@@ -856,7 +856,7 @@ mod tests {
 
         sparse_set.remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -868,7 +868,7 @@ mod tests {
 
         sparse_set.swap_remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -881,7 +881,7 @@ mod tests {
 
         sparse_set.remove(key1);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
     }
@@ -895,7 +895,7 @@ mod tests {
 
         sparse_set.swap_remove(key1);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), None);
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
     }
@@ -909,7 +909,7 @@ mod tests {
 
         sparse_set.remove(key2);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(sparse_set.get(key2), None);
     }
@@ -923,7 +923,7 @@ mod tests {
 
         sparse_set.swap_remove(key2);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(sparse_set.get(key2), None);
     }
@@ -937,7 +937,7 @@ mod tests {
 
         let new_key = sparse_set.push("43".to_string());
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), None);
         assert_eq!(sparse_set.get(new_key), Some(&"43".to_string()));
     }
@@ -951,7 +951,7 @@ mod tests {
 
         let new_key = sparse_set.push("43".to_string());
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), None);
         assert_eq!(sparse_set.get(new_key), Some(&"43".to_string()));
     }
@@ -968,7 +968,7 @@ mod tests {
 
         sparse_set.remove(key1);
 
-        assert_eq!(sparse_set.size(), 4);
+        assert_eq!(sparse_set.len(), 4);
         for (i, value) in sparse_set.values().enumerate() {
             if i == 0 {
                 assert_eq!(value, &"43".to_string());
@@ -996,7 +996,7 @@ mod tests {
         sparse_set.remove(key);
         sparse_set.remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -1009,7 +1009,7 @@ mod tests {
         sparse_set.swap_remove(key);
         sparse_set.swap_remove(key);
 
-        assert_eq!(sparse_set.size(), 0);
+        assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get(key), None);
     }
 
@@ -1087,7 +1087,7 @@ mod tests {
             *value = "43".to_string();
         }
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
     }
 
@@ -1101,7 +1101,7 @@ mod tests {
 
         sparse_set.swap(key1, key2);
 
-        assert_eq!(sparse_set.size(), 2);
+        assert_eq!(sparse_set.len(), 2);
         for (i, value) in sparse_set.values().enumerate() {
             if i == 0 {
                 assert_eq!(value, &"43".to_string());
@@ -1121,7 +1121,7 @@ mod tests {
 
         sparse_set.swap(key, key);
 
-        assert_eq!(sparse_set.size(), 1);
+        assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
     }
 
@@ -1137,7 +1137,7 @@ mod tests {
 
         let cloned_sparse_set = sparse_set.clone();
 
-        assert_eq!(cloned_sparse_set.size(), 5);
+        assert_eq!(cloned_sparse_set.len(), 5);
         assert_eq!(cloned_sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(cloned_sparse_set.get(key2), Some(&"43".to_string()));
         assert_eq!(cloned_sparse_set.get(key3), Some(&"44".to_string()));
