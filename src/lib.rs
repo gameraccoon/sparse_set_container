@@ -46,10 +46,7 @@ impl<T> SparseSet<T> {
     ///
     /// Panics if the type `T` is zero-sized.
     pub fn new() -> Self {
-        assert!(
-            std::mem::size_of::<T>() > 0,
-            "Zero-sized types are not supported"
-        );
+        assert!(size_of::<T>() > 0, "Zero-sized types are not supported");
         Self {
             storage: storage::SparseArrayStorage::new(),
             next_free_sparse_entry: MAX_SPARSE_INDEX,
@@ -63,10 +60,7 @@ impl<T> SparseSet<T> {
     /// - Panics if the type `T` is zero-sized.
     /// - Panics if the memory allocation fails.
     pub fn with_capacity(capacity: usize) -> Self {
-        assert!(
-            std::mem::size_of::<T>() > 0,
-            "Zero-sized types are not supported"
-        );
+        assert!(size_of::<T>() > 0, "Zero-sized types are not supported");
         Self {
             storage: storage::SparseArrayStorage::with_capacity(capacity),
             next_free_sparse_entry: MAX_SPARSE_INDEX,
@@ -262,7 +256,7 @@ impl<T> SparseSet<T> {
         }
 
         let sparse_entry = self.storage.get_sparse()[key.sparse_index];
-        return sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch;
+        sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch
     }
 
     /// Returns the number of elements in the set.
