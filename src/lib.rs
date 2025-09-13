@@ -187,6 +187,8 @@ impl<T> SparseSet<T> {
     }
 
     /// Removes all the elements from the set.
+    ///
+    /// O(n) time complexity.
     pub fn clear(&mut self) {
         for i in 0..self.storage.get_dense_len() {
             self.mark_as_free(self.storage.get_dense_keys()[i]);
