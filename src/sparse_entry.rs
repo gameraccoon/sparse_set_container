@@ -20,7 +20,7 @@ pub(crate) struct SparseEntry {
     epoch_or_next_epoch: usize,
 }
 
-const DEAD_BIT: usize = 1 << (std::mem::size_of::<usize>() * 8 - 1);
+const DEAD_BIT: usize = 1 << (size_of::<usize>() * 8 - 1);
 
 // The max possible value next_free can have due to the dead bit being always unset
 pub(crate) const MAX_SPARSE_INDEX: usize = DEAD_BIT - 1;
@@ -35,11 +35,9 @@ impl SparseEntry {
         }
     }
 
-    pub(crate) fn new_free(next_free: usize, next_epoch: usize) -> Self {
-        Self {
-            dense_index_or_next_free: next_free | DEAD_BIT,
-            epoch_or_next_epoch: next_epoch,
-        }
+    pub(crate) fn mark_free(&mut self, next_free: usize) {
+        self.dense_index_or_next_free = next_free | DEAD_BIT;
+        self.epoch_or_next_epoch = usize::wrapping_add(self.epoch_or_next_epoch, 1);
     }
 
     pub(crate) fn is_alive(&self) -> bool {

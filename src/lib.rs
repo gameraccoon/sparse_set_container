@@ -121,7 +121,7 @@ impl<T> SparseSet<T> {
 
             let removed_value = self.storage.swap_remove_dense(sparse_entry.dense_index());
 
-            self.mark_as_free(key, sparse_entry);
+            self.mark_as_free(key);
             Some(removed_value)
         } else {
             // the element was already removed (either there's nothing, or a newer element)
@@ -152,12 +152,20 @@ impl<T> SparseSet<T> {
 
             let removed_value = self.storage.remove_dense(sparse_entry.dense_index());
 
-            self.mark_as_free(key, sparse_entry);
+            self.mark_as_free(key);
             Some(removed_value)
         } else {
             // the element was already removed (either there's nothing, or a newer element)
             None
         }
+    }
+
+    /// Remove all the elements from the set.
+    pub fn clear(&mut self) {
+        for i in 0..self.storage.get_dense_len() {
+            self.mark_as_free(self.storage.get_dense_keys()[i]);
+        }
+        self.storage.clear_dense();
     }
 
     /// Swaps two elements in the set using their keys.
@@ -378,11 +386,8 @@ impl<T> SparseSet<T> {
             .zip(self.storage.get_dense_values().iter())
     }
 
-    fn mark_as_free(&mut self, key: SparseKey, entry: SparseEntry) {
-        self.storage.get_sparse_mut()[key.sparse_index] = SparseEntry::new_free(
-            self.next_free_sparse_entry,
-            usize::wrapping_add(entry.epoch(), 1),
-        );
+    fn mark_as_free(&mut self, key: SparseKey) {
+        self.storage.get_sparse_mut()[key.sparse_index].mark_free(self.next_free_sparse_entry);
 
         // as long as we have available epochs, we can reuse the sparse entry
         if key.epoch < MAX_EPOCH {
@@ -719,6 +724,51 @@ mod tests {
         assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get_key(0), None);
         assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set with no items => clear => no items
+    #[test]
+    fn sparse_set_with_no_items_clear_no_items() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        sparse_set.clear();
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set with three items => clear => no items
+    #[test]
+    fn sparse_set_with_one_item_clear_no_items() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+        sparse_set.push(43);
+        sparse_set.push(44);
+
+        sparse_set.clear();
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set with three items => clear and add new items => old keys are invalid
+    #[test]
+    fn sparse_set_with_three_items_clear_and_add_new_items_old_keys_are_invalid() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.clear();
+        let key4 = sparse_set.push(45);
+        let key5 = sparse_set.push(46);
+        let key6 = sparse_set.push(47);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.contains(key1), false);
+        assert_eq!(sparse_set.contains(key2), false);
+        assert_eq!(sparse_set.contains(key3), false);
+        assert_eq!(sparse_set.contains(key4), true);
+        assert_eq!(sparse_set.contains(key5), true);
+        assert_eq!(sparse_set.contains(key6), true);
     }
 
     // sparse set with three items => get index => the expected index is returned
@@ -1490,6 +1540,51 @@ mod tests {
         assert_eq!(sparse_set.len(), 0);
         assert_eq!(sparse_set.get_key(0), None);
         assert_eq!(sparse_set.get(key), None);
+    }
+
+    // sparse set of strings with no items => clear => no items
+    #[test]
+    fn sparse_set_of_strings_with_no_items_clear_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.clear();
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set of strings with three items => clear => no items
+    #[test]
+    fn sparse_set_of_strings_with_one_item_clear_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+        sparse_set.push("44".to_string());
+
+        sparse_set.clear();
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set of strings with three items => clear and add new items => old keys are invalid
+    #[test]
+    fn sparse_set_of_strings_with_three_items_clear_and_add_new_items_old_keys_are_invalid() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.clear();
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
+        let key6 = sparse_set.push("47".to_string());
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.contains(key1), false);
+        assert_eq!(sparse_set.contains(key2), false);
+        assert_eq!(sparse_set.contains(key3), false);
+        assert_eq!(sparse_set.contains(key4), true);
+        assert_eq!(sparse_set.contains(key5), true);
+        assert_eq!(sparse_set.contains(key6), true);
     }
 
     // sparse set of strings with three items => iterate over values => the values are iterated in order

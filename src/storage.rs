@@ -219,9 +219,9 @@ impl<T> SparseArrayStorage<T> {
     pub(crate) fn remove_dense(&mut self, index: usize) -> T {
         let old_dense_len = self.dense_len;
 
-        // remove the element, shifting the rest of the elements to the left
+        // move the element from the storage to the local variable
         let value = unsafe { std::ptr::read(self.dense_values_start_ptr.add(index)) };
-        // we don't explicitly drop key, because it implements Copy
+        // key doesn't need to be explicitly dropped
         let dense_values_span_start = unsafe { self.dense_values_start_ptr.add(index) };
         let dense_keys_span_start = unsafe { self.dense_keys_start_ptr.add(index) };
 
@@ -251,9 +251,9 @@ impl<T> SparseArrayStorage<T> {
     pub(crate) fn swap_remove_dense(&mut self, index: usize) -> T {
         let old_dense_len = self.dense_len;
 
-        // remove the element, swapping it with the last element
+        // move the element from the storage to the local variable
         let value = unsafe { std::ptr::read(self.dense_values_start_ptr.add(index)) };
-        // we don't explicitly drop key, because it implements Copy
+        // key doesn't need to be explicitly dropped
 
         let last_dense_index = old_dense_len - 1;
 
@@ -275,6 +275,21 @@ impl<T> SparseArrayStorage<T> {
         self.dense_len -= 1;
 
         value
+    }
+
+    pub(crate) fn clear_dense(&mut self) {
+        // make sure to drop the values, no need to explicitly drop keys
+        if self.dense_len > 0 {
+            if std::mem::needs_drop::<T>() {
+                for i in 0..self.dense_len {
+                    unsafe {
+                        std::ptr::drop_in_place(self.dense_values_start_ptr.add(i));
+                    }
+                }
+            }
+
+            self.dense_len = 0;
+        }
     }
 
     pub(crate) fn get_dense_values(&self) -> &[T] {
@@ -433,13 +448,7 @@ where
 impl<T> Drop for SparseArrayStorage<T> {
     fn drop(&mut self) {
         if let Some(layout) = self.layout {
-            if std::mem::needs_drop::<T>() {
-                for i in 0..self.dense_len {
-                    unsafe {
-                        std::ptr::drop_in_place(self.dense_values_start_ptr.add(i));
-                    }
-                }
-            }
+            self.clear_dense();
             Self::deallocate_buffer(self.buffer, layout);
         }
     }
