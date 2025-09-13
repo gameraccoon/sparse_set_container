@@ -353,6 +353,13 @@ impl<T> SparseSet<T> {
         self.storage.get_dense_len()
     }
 
+    /// Returns the number of elements the set can hold without reallocating.
+    ///
+    /// O(1) time complexity.
+    pub fn capacity(&self) -> usize {
+        self.storage.get_dense_capacity()
+    }
+
     /// Returns true if the set is empty.
     ///
     /// O(1) time complexity.
@@ -1341,6 +1348,59 @@ mod tests {
         sparse_set.push(42);
 
         sparse_set.rotate_right(0, 2, 2);
+    }
+
+    // sparse set with no items => capacity => 0
+    #[test]
+    fn sparse_set_with_no_items_capacity() {
+        let sparse_set: SparseSet<i32> = SparseSet::new();
+
+        assert_eq!(sparse_set.capacity(), 0);
+    }
+
+    // sparse set of usize with no items => add item and check capacity => returns 4
+    #[test]
+    fn sparse_set_of_usize_with_no_items_add_item_and_check_capacity_returns_four() {
+        let mut sparse_set: SparseSet<usize> = SparseSet::new();
+
+        sparse_set.push(42);
+
+        // minimum allocated capacity for small elements is 4
+        assert_eq!(sparse_set.capacity(), 4);
+    }
+
+    // sparse set of usize with no items => add 5 items and check capacity => returns 8
+    #[test]
+    fn sparse_set_of_usize_with_no_items_add_five_items_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<usize> = SparseSet::new();
+
+        sparse_set.push(42);
+        sparse_set.push(43);
+        sparse_set.push(44);
+        sparse_set.push(45);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(46);
+
+        // double the capacity when adding 5th element
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set of usize with capacity of 6 => add 7 items and check capacity => returns 12
+    #[test]
+    fn sparse_set_of_usize_with_capacity_of_seven_items_add_item_and_check_capacity() {
+        let mut sparse_set: SparseSet<usize> = SparseSet::with_capacity(6);
+
+        sparse_set.push(42);
+        sparse_set.push(43);
+        sparse_set.push(44);
+        sparse_set.push(45);
+        sparse_set.push(46);
+        sparse_set.push(47);
+        assert_eq!(sparse_set.capacity(), 6);
+        sparse_set.push(48);
+
+        // double the capacity when adding 7th element
+        assert_eq!(sparse_set.capacity(), 12);
     }
 
     // empty sparse set of strings => created => no items

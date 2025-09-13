@@ -312,6 +312,10 @@ impl<T> SparseArrayStorage<T> {
         self.dense_len
     }
 
+    pub(crate) fn get_dense_capacity(&self) -> usize {
+        self.max_dense_elements
+    }
+
     pub(crate) fn get_sparse_len(&self) -> usize {
         self.sparse_len
     }
