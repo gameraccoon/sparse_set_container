@@ -33,11 +33,7 @@ pub(crate) struct SparseArrayStorage<T> {
 
 impl<T> SparseArrayStorage<T> {
     // don't waste space for big objects, and for smaller ones don't waste time on early reallocations
-    const MIN_NON_ZERO_CAPACITY: usize = if std::mem::size_of::<T>() <= 1024 {
-        4
-    } else {
-        1
-    };
+    const MIN_NON_ZERO_CAPACITY: usize = if size_of::<T>() <= 1024 { 4 } else { 1 };
 
     pub(crate) fn new() -> Self {
         Self {
@@ -60,12 +56,8 @@ impl<T> SparseArrayStorage<T> {
             return Self::new();
         }
 
-        let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-            std::mem::size_of::<T>(),
-            std::mem::align_of::<T>(),
-            capacity,
-            capacity,
-        );
+        let (layout, buffer, dense_keys_offset, sparse_offset) =
+            Self::allocate_new_buffer(size_of::<T>(), align_of::<T>(), capacity, capacity);
 
         Self {
             dense_values_start_ptr: buffer as *mut T,
@@ -108,8 +100,8 @@ impl<T> SparseArrayStorage<T> {
                 let new_max_dense_elements = new_max_sparse_elements - exhausted_sparse_elements;
 
                 let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-                    std::mem::size_of::<T>(),
-                    std::mem::align_of::<T>(),
+                    size_of::<T>(),
+                    align_of::<T>(),
                     new_max_dense_elements,
                     new_max_sparse_elements,
                 );
@@ -160,8 +152,8 @@ impl<T> SparseArrayStorage<T> {
         } else {
             // we never allocated the buffer before
             let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-                std::mem::size_of::<T>(),
-                std::mem::align_of::<T>(),
+                size_of::<T>(),
+                align_of::<T>(),
                 Self::MIN_NON_ZERO_CAPACITY,
                 Self::MIN_NON_ZERO_CAPACITY,
             );
@@ -330,11 +322,11 @@ impl<T> SparseArrayStorage<T> {
         new_max_dense_values: usize,
         new_max_sparse_values: usize,
     ) -> (Option<std::alloc::Layout>, *mut u8, usize, usize) {
-        const SIZE_OF_DENSE_KEY: usize = std::mem::size_of::<SparseKey>();
-        const SIZE_OF_SPARSE_ENTRY: usize = std::mem::size_of::<SparseEntry>();
+        const SIZE_OF_DENSE_KEY: usize = size_of::<SparseKey>();
+        const SIZE_OF_SPARSE_ENTRY: usize = size_of::<SparseEntry>();
 
-        const ALIGN_OF_DENSE_KEY: usize = std::mem::align_of::<SparseKey>();
-        const ALIGN_OF_SPARSE_ENTRY: usize = std::mem::align_of::<SparseEntry>();
+        const ALIGN_OF_DENSE_KEY: usize = align_of::<SparseKey>();
+        const ALIGN_OF_SPARSE_ENTRY: usize = align_of::<SparseEntry>();
 
         // for the simplicity sake, we take the largest alignment
         // we could theoretically go with the alignment of the first element,
@@ -390,8 +382,8 @@ where
 {
     fn clone(&self) -> Self {
         let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-            std::mem::size_of::<T>(),
-            std::mem::align_of::<T>(),
+            size_of::<T>(),
+            align_of::<T>(),
             self.max_dense_elements,
             self.max_sparse_elements,
         );
