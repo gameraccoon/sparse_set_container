@@ -160,7 +160,33 @@ impl<T> SparseSet<T> {
         }
     }
 
-    /// Remove all the elements from the set.
+    /// Removes an element by the index from the set, swapping it with the last element.
+    /// Returns the removed value if it was present in the set.
+    ///
+    /// O(1) time complexity, however changes the order of elements.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
+    pub fn swap_remove_by_index(&mut self, index: usize) -> Option<T> {
+        let key = self.storage.get_dense_keys()[index];
+        self.swap_remove(key)
+    }
+
+    /// Removes an element by the index from the set, keeping the order of elements.
+    /// Returns the removed value if it was present in the set.
+    ///
+    /// O(n) time complexity, however doesn't change the order of elements.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
+    pub fn remove_by_index(&mut self, index: usize) -> Option<T> {
+        let key = self.storage.get_dense_keys()[index];
+        self.remove(key)
+    }
+
+    /// Removes all the elements from the set.
     pub fn clear(&mut self) {
         for i in 0..self.storage.get_dense_len() {
             self.mark_as_free(self.storage.get_dense_keys()[i]);
@@ -734,6 +760,67 @@ mod tests {
         sparse_set.clear();
 
         assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set with five items => remove first item by index => order is not changed
+    #[test]
+    fn sparse_set_with_five_items_remove_first_item_by_index_order_is_not_changed() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+        let key5 = sparse_set.push(46);
+
+        sparse_set.remove_by_index(0);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key4));
+        assert_eq!(sparse_set.get_key(3), Some(key5));
+        assert_eq!(sparse_set.get_key(4), None);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+        assert_eq!(sparse_set.get(key5), Some(&46));
+    }
+
+    // sparse set with five items => swap remove first item by index => order is not changed
+    #[test]
+    fn sparse_set_with_five_items_swap_remove_first_item_by_index_order_is_not_changed() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+        let key5 = sparse_set.push(46);
+
+        sparse_set.swap_remove_by_index(0);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key5));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get_key(2), Some(key3));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get_key(4), None);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+        assert_eq!(sparse_set.get(key5), Some(&46));
+    }
+
+    // sparse set with two items => remove third item by index => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_two_items_remove_third_item_by_index_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+        sparse_set.push(43);
+
+        sparse_set.remove_by_index(2);
     }
 
     // sparse set with three items => clear => no items
@@ -1550,6 +1637,68 @@ mod tests {
         sparse_set.clear();
 
         assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set of strings with five items => remove first item by index => order is not changed
+    #[test]
+    fn sparse_set_of_strings_with_five_items_remove_first_item_by_index_order_is_not_changed() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
+
+        sparse_set.remove_by_index(0);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key3));
+        assert_eq!(sparse_set.get_key(2), Some(key4));
+        assert_eq!(sparse_set.get_key(3), Some(key5));
+        assert_eq!(sparse_set.get_key(4), None);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
+    }
+
+    // sparse set of strings with five items => swap remove first item by index => order is not changed
+    #[test]
+    fn sparse_set_of_strings_with_five_items_swap_remove_first_item_by_index_order_is_not_changed()
+    {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
+
+        sparse_set.swap_remove_by_index(0);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_key(0), Some(key5));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get_key(2), Some(key3));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get_key(4), None);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
+    }
+
+    // sparse set of strings with two items => remove third item by index => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_of_strings_with_two_items_remove_third_item_by_index_panics() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+
+        sparse_set.remove_by_index(2);
     }
 
     // sparse set of strings with three items => clear => no items
