@@ -1,4 +1,4 @@
-// Copyright (C) Pavel Grebnev 2024
+// Copyright (C) Pavel Grebnev 2024-2025
 // Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 
 use crate::sparse_entry;
