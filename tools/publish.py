@@ -11,7 +11,12 @@ if status:
     print("Git has changes, commit them first")
     exit(1)
 
-version = os.popen("cargo pkgid").read().split("@")[1].strip()
+# get the version after @ or # from the result of `cargo pkgid`
+pkgid_output = os.popen("cargo pkgid").read()
+pkgid_output_split = pkgid_output.split("@")
+if len(pkgid_output_split) == 1:
+    pkgid_output_split = pkgid_output.split("#")
+version = pkgid_output_split[1].strip()
 print(f"Current version is '{version}'")
 
 push = "--push" in sys.argv
