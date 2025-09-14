@@ -35,7 +35,7 @@ An array-like container based on sparse set implementation that allows O(1) acce
 | --------- | --------- | ------- |
 | push      | O(1)      | O(1)    |
 | lookup    | O(1)      | O(1)    |
-| size/len  | O(1)      | O(1)    |
+| len       | O(1)      | O(1)    |
 | remove    | O(n)      | O(n)    |
 | swap_remove | O(1)    | O(1)    |
 
