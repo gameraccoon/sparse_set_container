@@ -246,6 +246,10 @@ impl<T> SparseArrayStorage<T> {
     }
 
     pub(crate) fn reserve(&mut self, additional: usize) {
+        if additional == 0 {
+            return;
+        }
+
         let old_sparse_len = self.sparse_len;
         let old_dense_len = self.dense_len;
         let desired_capacity = old_sparse_len + additional;
