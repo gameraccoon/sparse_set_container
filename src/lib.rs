@@ -296,6 +296,16 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Extends the set with the given values.
+    ///
+    /// O(n) time complexity, where n is the number of elements to be added.
+    pub fn extend_with_vec(&mut self, values: Vec<T>) {
+        self.storage.reserve(values.len());
+        for value in values {
+            self.push(value);
+        }
+    }
+
     /// Returns a reference to the value stored at the given key.
     /// If the key is not valid, returns None.
     ///
@@ -1572,6 +1582,49 @@ mod tests {
         assert_eq!(sparse_set.get(key7), Some(&48));
     }
 
+    // empty sparse set => extend with vec => has all vec elements
+    #[test]
+    fn empty_sparse_set_extend_with_vec_has_all_vec_elements() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.extend_with_vec(vec![42, 43, 44]);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get(sparse_set.get_key(0).unwrap()), Some(&42));
+        assert_eq!(sparse_set.get(sparse_set.get_key(1).unwrap()), Some(&43));
+        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&44));
+    }
+
+    // sparse set with two elements => extend with vec => has all elements
+    #[test]
+    fn sparse_set_with_two_elements_extend_with_vec_has_all_elements() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.extend_with_vec(vec![44, 45, 46]);
+
+        assert_eq!(sparse_set.len(), 5);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&44));
+        assert_eq!(sparse_set.get(sparse_set.get_key(3).unwrap()), Some(&45));
+        assert_eq!(sparse_set.get(sparse_set.get_key(4).unwrap()), Some(&46));
+    }
+
+    // sparse set with two elements => extend with empty vec => sparse set has two elements
+    #[test]
+    fn sparse_set_with_two_elements_extend_with_empty_vec_sparse_set_has_two_elements() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.extend_with_vec(Vec::new());
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
     // empty sparse set of strings => created => no items
     #[test]
     fn empty_sparse_set_of_strings_created_no_items() {
@@ -2604,6 +2657,49 @@ mod tests {
         assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
         assert_eq!(sparse_set.get(key6), Some(&"47".to_string()));
         assert_eq!(sparse_set.get(key7), Some(&"48".to_string()));
+    }
+
+    // empty sparse set of strings => extend with vec => has all vec elements
+    #[test]
+    fn empty_sparse_set_of_strings_extend_with_vec_has_all_vec_elements() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.extend_with_vec(vec!["42".to_string(), "43".to_string(), "44".to_string()]);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get(sparse_set.get_key(0).unwrap()), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(sparse_set.get_key(1).unwrap()), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with two elements => extend with vec => has all elements
+    #[test]
+    fn sparse_set_of_strings_with_two_elements_extend_with_vec_has_all_elements() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.extend_with_vec(vec!["44".to_string(), "45".to_string(), "46".to_string()]);
+
+        assert_eq!(sparse_set.len(), 5);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(sparse_set.get_key(3).unwrap()), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(sparse_set.get_key(4).unwrap()), Some(&"46".to_string()));
+    }
+
+    // sparse set of strings with two elements => extend with empty vec => sparse set has two elements
+    #[test]
+    fn sparse_set_of_strings_with_two_elements_extend_with_empty_vec_sparse_set_has_two_elements() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.extend_with_vec(Vec::new());
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
     }
 
     // sparse set with ZST => try to create => panics
