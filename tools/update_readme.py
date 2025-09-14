@@ -43,7 +43,7 @@ def replace_install_instruction(readme, version):
 
 def replace_examples(readme):
     blocks = re.findall(r'<!--(.*)\.rs start-->', readme)
-    print(f'Found examples: {blocks}')
+    print(f'Found README examples to populate: {blocks}')
     for block in blocks:
         start = f'<!--{block}.rs start-->'
         end = f'<!--{block}.rs end-->'
@@ -51,11 +51,19 @@ def replace_examples(readme):
         end_index = readme.find(end)
 
         if start_index == -1 or end_index == -1:
-            print(f'Block {block} not found')
-            continue
+            print(f"Block '{block}' not found in README, aborting")
+            exit(1)
 
-        with open(f'examples/{block}.rs', 'r') as file:
+        try:
+            file = open(f'examples/{block}.rs', 'r')
             code = file.read()
+        except FileNotFoundError:
+            print(f"File '{block}.rs' not found, aborting")
+            exit(1)
+        except Exception as e:
+            print(f"Failed to read file '{block}.rs', aborting")
+            print(e)
+            exit(1)
 
         code = code.strip()
 
@@ -79,8 +87,8 @@ def update_benchmark_results(readme):
     end_index = readme.find(end)
 
     if start_index == -1 or end_index == -1:
-        print('Benchmark table not found')
-        return readme
+        print('Benchmark table was not found in README, aborting')
+        exit(1)
 
     with open(benchmark_file, 'r') as file:
         results = file.read()
@@ -90,7 +98,7 @@ def update_benchmark_results(readme):
     return readme[:start_index + len(start)] + "\n" +results + "\n" + readme[end_index:]
 
 version = get_version()
-print(f'Latest version: {version}')
+print(f"Updating version in README to '{version}'")
 
 with open('README.md', 'r') as file:
     readme = file.read()

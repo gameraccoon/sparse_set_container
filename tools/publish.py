@@ -3,7 +3,9 @@ import sys
 import subprocess
 
 # run update_readme.py in order to make sure we have no changes there
-os.system("python tools/update_readme.py")
+if subprocess.run(["python", "tools/update_readme.py"]).returncode != 0:
+    print("\nFailed to run update_readme.py, exiting")
+    exit(1)
 
 # check that git doesn't have any changes
 status = os.popen("git status --porcelain").read()
