@@ -7,7 +7,6 @@ mod storage;
 
 pub use sparse_key::SparseKey;
 
-use sparse_entry::SparseEntry;
 use sparse_entry::MAX_EPOCH;
 use sparse_entry::MAX_SPARSE_INDEX;
 
@@ -235,13 +234,40 @@ impl<T> SparseSet<T> {
 
             // swap the references in the sparse array
             let sparse_array = self.storage.get_sparse_mut();
-            sparse_array[key1.sparse_index] =
-                SparseEntry::new_alive(sparse_entry2.dense_index(), sparse_entry1.epoch());
-            sparse_array[key2.sparse_index] =
-                SparseEntry::new_alive(sparse_entry1.dense_index(), sparse_entry2.epoch());
+            sparse_array[key1.sparse_index].replace_pointed_to_value(sparse_entry2.dense_index());
+            sparse_array[key2.sparse_index].replace_pointed_to_value(sparse_entry1.dense_index());
         } else {
             panic!("Cannot swap elements that are not alive");
         }
+    }
+
+    /// Swaps two elements in the set using their positions.
+    ///
+    /// O(1) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// - Panics if any of the indices are out of bounds.
+    pub fn swap_by_index(&mut self, index1: usize, index2: usize) {
+        if index1 >= self.storage.get_dense_len() || index2 >= self.storage.get_dense_len() {
+            panic!(
+                "The index is out of bounds: {} and {}, len is {}",
+                index1,
+                index2,
+                self.storage.get_dense_len()
+            );
+        }
+
+        let key1 = self.storage.get_dense_keys()[index1];
+        let key2 = self.storage.get_dense_keys()[index2];
+
+        self.storage.get_dense_values_mut().swap(index1, index2);
+        self.storage.get_dense_keys_mut().swap(index1, index2);
+
+        // swap the references in the sparse array
+        let sparse_array = self.storage.get_sparse_mut();
+        sparse_array[key1.sparse_index].replace_pointed_to_value(index2);
+        sparse_array[key2.sparse_index].replace_pointed_to_value(index1);
     }
 
     /// Rotate the elements in the range [start_index, end_index) to the left while keeping
@@ -254,11 +280,18 @@ impl<T> SparseSet<T> {
     /// Panics if the indices are out of bounds or end_index is less than start_index.
     pub fn rotate_left(&mut self, start_index: usize, end_index: usize, mid: usize) {
         if start_index >= end_index {
-            panic!("start_index must be less than end_index");
+            panic!(
+                "start_index must be less than end_index: {} and {}",
+                start_index, end_index
+            );
         }
 
         if end_index > self.storage.get_dense_len() {
-            panic!("end_index must be less than the length of the SparseSet");
+            panic!(
+                "end_index must be less than the length of the SparseSet: {}, len is {}",
+                end_index,
+                self.storage.get_dense_len()
+            );
         }
 
         self.storage.get_dense_values_mut()[start_index..end_index].rotate_left(mid);
@@ -280,11 +313,18 @@ impl<T> SparseSet<T> {
     /// Panics if the indices are out of bounds or end_index is less than start_index.
     pub fn rotate_right(&mut self, start_index: usize, end_index: usize, k: usize) {
         if start_index >= end_index {
-            panic!("start_index must be less than end_index");
+            panic!(
+                "start_index must be less than end_index: {} and {}",
+                start_index, end_index
+            );
         }
 
         if end_index > self.storage.get_dense_len() {
-            panic!("end_index must be less than the length of the SparseSet");
+            panic!(
+                "end_index must be less than the length of the SparseSet: {}, len is {}",
+                end_index,
+                self.storage.get_dense_len()
+            );
         }
 
         self.storage.get_dense_values_mut()[start_index..end_index].rotate_right(k);
@@ -467,9 +507,10 @@ impl<T> SparseSet<T> {
     }
 
     fn project_dense_key_to_sparse(&mut self, dense_index: usize) {
+        // this function assumes that the dense key point to the correct value,
+        // and it is the sparse key that needs to be updated to keep pointing to the expected value
         let key = self.storage.get_dense_keys()[dense_index];
-        self.storage.get_sparse_mut()[key.sparse_index] =
-            SparseEntry::new_alive(dense_index, key.epoch)
+        self.storage.get_sparse_mut()[key.sparse_index].replace_pointed_to_value(dense_index);
     }
 }
 
@@ -1067,6 +1108,53 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // sparse set with two items => swap the items by indices => the items are swapped in order but not by keys
+    #[test]
+    fn sparse_set_with_two_items_swap_the_items_by_indices_the_items_are_swapped_in_order_but_not_by_keys(
+    ) {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.swap_by_index(0, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        for (i, value) in sparse_set.values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &43);
+            } else {
+                assert_eq!(value, &42);
+            }
+        }
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+    }
+
+    // sparse set with one item => try swapping with itself by index => does nothing
+    #[test]
+    fn sparse_set_with_one_item_try_swapping_with_itself_by_index_does_nothing() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key = sparse_set.push(42);
+
+        sparse_set.swap_by_index(0, 0);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // sparse set with one item => try swapping with non-existing element by index => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_one_item_try_swapping_with_non_existing_element_by_index_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+
+        sparse_set.swap_by_index(0, 1);
     }
 
     // sparse set with five items => clone the set => cloned set has the same items
@@ -2208,6 +2296,54 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with two items => swap the items by indices => the items are swapped in order but not by keys
+    #[test]
+    fn sparse_set_of_strings_with_two_items_swap_the_items_by_indices_the_items_are_swapped_in_order_but_not_by_keys(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.swap_by_index(0, 1);
+
+        assert_eq!(sparse_set.len(), 2);
+        for (i, value) in sparse_set.values().enumerate() {
+            if i == 0 {
+                assert_eq!(value, &"43".to_string());
+            } else {
+                assert_eq!(value, &"42".to_string());
+            }
+        }
+        assert_eq!(sparse_set.get_key(0), Some(key2));
+        assert_eq!(sparse_set.get_key(1), Some(key1));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // sparse set of strings with one item => try swapping with itself by index => does nothing
+    #[test]
+    fn sparse_set_of_strings_with_one_item_try_swapping_with_itself_by_index_does_nothing() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        sparse_set.swap_by_index(0, 0);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with one item => try swapping with non-existing element by index => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_of_strings_with_one_item_try_swapping_with_non_existing_element_by_index_panics()
+    {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+
+        sparse_set.swap_by_index(0, 1);
     }
 
     // sparse set of strings with five items => clone the set => cloned set has the same items

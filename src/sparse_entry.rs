@@ -36,8 +36,14 @@ impl SparseEntry {
     }
 
     pub(crate) fn mark_free(&mut self, next_free: usize) {
+        debug_assert!(self.is_alive());
         self.dense_index_or_next_free = next_free | DEAD_BIT;
         self.epoch_or_next_epoch = usize::wrapping_add(self.epoch_or_next_epoch, 1);
+    }
+
+    pub(crate) fn replace_pointed_to_value(&mut self, new_dense_index: usize) {
+        debug_assert!(self.is_alive());
+        self.dense_index_or_next_free = new_dense_index;
     }
 
     pub(crate) fn is_alive(&self) -> bool {
