@@ -351,6 +351,20 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Returns a reference to the element at the specified index.
+    ///
+    /// O(1) time complexity.
+    pub fn get_by_index(&self, index: usize) -> Option<&T> {
+        self.storage.get_dense_values().get(index)
+    }
+
+    /// Returns a mutable reference to the element at the specified index.
+    ///
+    /// O(1) time complexity.
+    pub fn get_by_index_mut(&mut self, index: usize) -> Option<&mut T> {
+        self.storage.get_dense_values_mut().get_mut(index)
+    }
+
     /// Returns true if the key points to a valid element in the set.
     ///
     /// O(1) time complexity.
@@ -559,6 +573,36 @@ mod tests {
         *sparse_set.get_mut(key).unwrap() = 43;
 
         assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get(key), Some(&43));
+    }
+
+    // sparse set with one item => get item by index => the item is returned
+    #[test]
+    fn sparse_set_with_one_item_get_item_by_index_the_item_is_returned() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+
+        assert_eq!(sparse_set.get_by_index(0), Some(&42));
+    }
+
+    // sparse set with one item => get item by wrong index => None is returned
+    #[test]
+    fn sparse_set_with_one_item_get_item_by_wrong_index_none_is_returned() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        sparse_set.push(42);
+
+        assert_eq!(sparse_set.get_by_index(1), None);
+    }
+
+    // sparse set with one item => get mutable reference by index and mutate => the item is changed
+    #[test]
+    fn sparse_set_with_one_item_get_mutable_ref_by_index_and_mutate_the_item_is_changed() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key = sparse_set.push(42);
+
+        let mutable_ref = sparse_set.get_by_index_mut(0).unwrap();
+        *mutable_ref = 43;
+
         assert_eq!(sparse_set.get(key), Some(&43));
     }
 
@@ -1727,6 +1771,37 @@ mod tests {
         assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
     }
 
+    // sparse set of strings with one item => get item by index => the item is returned
+    #[test]
+    fn sparse_set_of_strings_with_one_item_get_item_by_index_the_item_is_returned() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+
+        assert_eq!(sparse_set.get_by_index(0), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with one item => get item by wrong index => None is returned
+    #[test]
+    fn sparse_set_of_strings_with_one_item_get_item_by_wrong_index_none_is_returned() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        sparse_set.push("42".to_string());
+
+        assert_eq!(sparse_set.get_by_index(1), None);
+    }
+
+    // sparse set of strings with one item => get mutable reference by index and mutate => the item is changed
+    #[test]
+    fn sparse_set_of_strings_with_one_item_get_mutable_ref_by_index_and_mutate_the_item_is_changed()
+    {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key = sparse_set.push("42".to_string());
+
+        let mutable_ref = sparse_set.get_by_index_mut(0).unwrap();
+        *mutable_ref = "43".to_string();
+
+        assert_eq!(sparse_set.get(key), Some(&"43".to_string()));
+    }
+
     // sparse set of strings with one item => remove item => no items
     #[test]
     fn sparse_set_of_strings_with_one_item_remove_item_no_items() {
@@ -2666,9 +2741,18 @@ mod tests {
         sparse_set.extend_with_vec(vec!["42".to_string(), "43".to_string(), "44".to_string()]);
 
         assert_eq!(sparse_set.len(), 3);
-        assert_eq!(sparse_set.get(sparse_set.get_key(0).unwrap()), Some(&"42".to_string()));
-        assert_eq!(sparse_set.get(sparse_set.get_key(1).unwrap()), Some(&"43".to_string()));
-        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&"44".to_string()));
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(0).unwrap()),
+            Some(&"42".to_string())
+        );
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(1).unwrap()),
+            Some(&"43".to_string())
+        );
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(2).unwrap()),
+            Some(&"44".to_string())
+        );
     }
 
     // sparse set of strings with two elements => extend with vec => has all elements
@@ -2683,9 +2767,18 @@ mod tests {
         assert_eq!(sparse_set.len(), 5);
         assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
-        assert_eq!(sparse_set.get(sparse_set.get_key(2).unwrap()), Some(&"44".to_string()));
-        assert_eq!(sparse_set.get(sparse_set.get_key(3).unwrap()), Some(&"45".to_string()));
-        assert_eq!(sparse_set.get(sparse_set.get_key(4).unwrap()), Some(&"46".to_string()));
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(2).unwrap()),
+            Some(&"44".to_string())
+        );
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(3).unwrap()),
+            Some(&"45".to_string())
+        );
+        assert_eq!(
+            sparse_set.get(sparse_set.get_key(4).unwrap()),
+            Some(&"46".to_string())
+        );
     }
 
     // sparse set of strings with two elements => extend with empty vec => sparse set has two elements
