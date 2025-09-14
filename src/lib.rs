@@ -621,7 +621,7 @@ mod tests {
 
     // sparse set with one item => swap_remove item => no items
     #[test]
-    fn swap_sparse_set_with_one_item_remove_item_no_items() {
+    fn sparse_set_with_one_item_swap_remove_item_no_items() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
 
@@ -685,7 +685,7 @@ mod tests {
 
     // sparse set with two items => swap_remove first item => has one item
     #[test]
-    fn swap_sparse_set_with_two_items_remove_first_item_has_one_item() {
+    fn sparse_set_with_two_items_swap_remove_first_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -717,7 +717,7 @@ mod tests {
 
     // sparse set with two items => swap_remove second item => has one item
     #[test]
-    fn swap_sparse_set_with_two_items_remove_second_item_has_one_item() {
+    fn sparse_set_with_two_items_swap_remove_second_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key1 = sparse_set.push(42);
         let key2 = sparse_set.push(43);
@@ -749,7 +749,7 @@ mod tests {
 
     // sparse set with one item => swap_remove an item and push new item => has one item
     #[test]
-    fn swap_sparse_set_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
+    fn sparse_set_with_one_item_swap_remove_an_item_and_push_new_item_has_one_item() {
         let mut sparse_set: SparseSet<i32> = SparseSet::new();
         let key = sparse_set.push(42);
         sparse_set.swap_remove(key);
@@ -1817,7 +1817,7 @@ mod tests {
 
     // sparse set of strings with one item => swap_remove item => no items
     #[test]
-    fn swap_sparse_set_of_strings_with_one_item_remove_item_no_items() {
+    fn sparse_set_of_strings_with_one_item_swap_remove_item_no_items() {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key = sparse_set.push("42".to_string());
 
@@ -1846,7 +1846,7 @@ mod tests {
 
     // sparse set of strings with two items => swap_remove first item => has one item
     #[test]
-    fn swap_sparse_set_of_strings_with_two_items_remove_first_item_has_one_item() {
+    fn sparse_set_of_strings_with_two_items_swap_remove_first_item_has_one_item() {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key1 = sparse_set.push("42".to_string());
         let key2 = sparse_set.push("43".to_string());
@@ -1878,7 +1878,7 @@ mod tests {
 
     // sparse set of strings with two items => swap_remove second item => has one item
     #[test]
-    fn swap_sparse_set_of_strings_with_two_items_remove_second_item_has_one_item() {
+    fn sparse_set_of_strings_with_two_items_swap_remove_second_item_has_one_item() {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key1 = sparse_set.push("42".to_string());
         let key2 = sparse_set.push("43".to_string());
@@ -1910,7 +1910,7 @@ mod tests {
 
     // sparse set of strings with one item => swap_remove an item and push new item => has one item
     #[test]
-    fn swap_sparse_set_of_strings_with_one_item_remove_an_item_and_push_new_item_has_one_item() {
+    fn sparse_set_of_strings_with_one_item_swap_remove_an_item_and_push_new_item_has_one_item() {
         let mut sparse_set: SparseSet<String> = SparseSet::new();
         let key = sparse_set.push("42".to_string());
         sparse_set.swap_remove(key);
