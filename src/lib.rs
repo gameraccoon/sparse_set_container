@@ -67,6 +67,18 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Reserves capacity for at least `additional` more elements to be inserted
+    /// in the given `SparseSet<T>`.
+    ///
+    /// O(n) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// May panic if the capacity overflows isize.
+    pub fn reserve(&mut self, additional: usize) {
+        self.storage.reserve(additional);
+    }
+
     /// Inserts a new value into the set and returns a key that can be used to access it.
     ///
     /// This can heap-allocate (if the internal arrays need to grow) but it won't invalidate any
@@ -1358,10 +1370,10 @@ mod tests {
         assert_eq!(sparse_set.capacity(), 0);
     }
 
-    // sparse set of usize with no items => add item and check capacity => returns 4
+    // sparse set with no items => add item and check capacity => returns 4
     #[test]
-    fn sparse_set_of_usize_with_no_items_add_item_and_check_capacity_returns_four() {
-        let mut sparse_set: SparseSet<usize> = SparseSet::new();
+    fn sparse_set_with_no_items_add_item_and_check_capacity_returns_four() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
 
         sparse_set.push(42);
 
@@ -1369,10 +1381,21 @@ mod tests {
         assert_eq!(sparse_set.capacity(), 4);
     }
 
-    // sparse set of usize with no items => add 5 items and check capacity => returns 8
+    // sparse set of big array with no items => add item and check capacity => returns 4
     #[test]
-    fn sparse_set_of_usize_with_no_items_add_five_items_and_check_capacity_returns_eight() {
-        let mut sparse_set: SparseSet<usize> = SparseSet::new();
+    fn sparse_set_of_big_array_with_no_items_add_item_and_check_capacity_returns_four() {
+        let mut sparse_set: SparseSet<[i8; 1025]> = SparseSet::new();
+
+        sparse_set.push([0; 1025]);
+
+        // the allocated capacity for big elements is 1
+        assert_eq!(sparse_set.capacity(), 1);
+    }
+
+    // sparse set with no items => add 5 items and check capacity => returns 8
+    #[test]
+    fn sparse_set_with_no_items_add_five_items_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
 
         sparse_set.push(42);
         sparse_set.push(43);
@@ -1385,10 +1408,10 @@ mod tests {
         assert_eq!(sparse_set.capacity(), 8);
     }
 
-    // sparse set of usize with capacity of 6 => add 7 items and check capacity => returns 12
+    // sparse set with capacity of 6 => add 7 items and check capacity => returns 12
     #[test]
-    fn sparse_set_of_usize_with_capacity_of_seven_items_add_item_and_check_capacity() {
-        let mut sparse_set: SparseSet<usize> = SparseSet::with_capacity(6);
+    fn sparse_set_with_capacity_of_seven_items_add_item_and_check_capacity() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(6);
 
         sparse_set.push(42);
         sparse_set.push(43);
@@ -1401,6 +1424,92 @@ mod tests {
 
         // double the capacity when adding 7th element
         assert_eq!(sparse_set.capacity(), 12);
+    }
+
+    // empty sparse set => reserve 8 and check capacity => returns 8
+    #[test]
+    fn empty_sparse_set_reserve_eight_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        sparse_set.reserve(8);
+
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set with capacity of 6 => reserve 8 and check capacity => returns 8
+    #[test]
+    fn sparse_set_with_capacity_of_six_reserve_eight_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(8);
+
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set with capacity of 6 => reserve 4 and check capacity => returns 6
+    #[test]
+    fn sparse_set_with_capacity_of_six_reserve_four_and_check_capacity_returns_six() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(4);
+
+        assert_eq!(sparse_set.capacity(), 6);
+    }
+
+    // sparse set with capacity of 6 => reserve 6 and check capacity => returns 6
+    #[test]
+    fn sparse_set_with_capacity_of_six_reserve_six_and_check_capacity_returns_six() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(6);
+
+        assert_eq!(sparse_set.capacity(), 6);
+    }
+
+    // sparse set with capacity of 2 => reserve 4 and add 5 elements => capacity is expected at all steps
+    #[test]
+    fn sparse_set_with_capacity_of_two_reserve_four_and_add_five_elements_capacity_is_expected_at_all_steps(
+    ) {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(2);
+
+        assert_eq!(sparse_set.capacity(), 2);
+        sparse_set.reserve(4);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(42);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(43);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(44);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(45);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push(46);
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set with two elements => reserve 4 and add 3 elements => all elements are added
+    #[test]
+    fn sparse_set_with_two_elements_reserve_four_and_add_three_elements_all_elements_are_added() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(2);
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+
+        sparse_set.reserve(4);
+        let key3 = sparse_set.push(44);
+        let key4 = sparse_set.push(45);
+        let key5 = sparse_set.push(46);
+
+        assert_eq!(sparse_set.len(), 5);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get_key(2), Some(key3));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get_key(4), Some(key5));
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+        assert_eq!(sparse_set.get(key5), Some(&46));
     }
 
     // empty sparse set of strings => created => no items
@@ -2246,6 +2355,138 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
         assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
         assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+    }
+
+    // sparse set of strings with no items => add item and check capacity => returns 4
+    #[test]
+    fn sparse_set_of_strings_with_no_items_add_item_and_check_capacity_returns_four() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.push("42".to_string());
+
+        // minimum allocated capacity for small elements is 4
+        assert_eq!(sparse_set.capacity(), 4);
+    }
+
+    // sparse set of strings with no items => add 5 items and check capacity => returns 8
+    #[test]
+    fn sparse_set_of_strings_with_no_items_add_five_items_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+        sparse_set.push("44".to_string());
+        sparse_set.push("45".to_string());
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("46".to_string());
+
+        // double the capacity when adding 5th element
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set of strings with capacity of 6 => add 7 items and check capacity => returns 12
+    #[test]
+    fn sparse_set_of_strings_with_capacity_of_seven_items_add_item_and_check_capacity() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(6);
+
+        sparse_set.push("42".to_string());
+        sparse_set.push("43".to_string());
+        sparse_set.push("44".to_string());
+        sparse_set.push("45".to_string());
+        sparse_set.push("46".to_string());
+        sparse_set.push("47".to_string());
+        assert_eq!(sparse_set.capacity(), 6);
+        sparse_set.push("48".to_string());
+
+        // double the capacity when adding 7th element
+        assert_eq!(sparse_set.capacity(), 12);
+    }
+
+    // empty sparse of strings set => reserve 8 and check capacity => returns 8
+    #[test]
+    fn empty_sparse_set_of_strings_reserve_eight_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.reserve(8);
+
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set of strings with capacity of 6 => reserve 8 and check capacity => returns 8
+    #[test]
+    fn sparse_set_of_strings_with_capacity_of_six_reserve_eight_and_check_capacity_returns_eight() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(8);
+
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set of strings with capacity of 6 => reserve 4 and check capacity => returns 6
+    #[test]
+    fn sparse_set_of_strings_with_capacity_of_six_reserve_four_and_check_capacity_returns_six() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(4);
+
+        assert_eq!(sparse_set.capacity(), 6);
+    }
+
+    // sparse set of strings with capacity of 6 => reserve 6 and check capacity => returns 6
+    #[test]
+    fn sparse_set_of_strings_with_capacity_of_six_reserve_six_and_check_capacity_returns_six() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(6);
+
+        sparse_set.reserve(6);
+
+        assert_eq!(sparse_set.capacity(), 6);
+    }
+
+    // sparse set of strings with capacity of 2 => reserve 4 and add 5 elements => capacity is expected at all steps
+    #[test]
+    fn sparse_set_of_strings_with_capacity_of_two_reserve_four_and_add_five_elements_capacity_is_expected_at_all_steps(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(2);
+
+        assert_eq!(sparse_set.capacity(), 2);
+        sparse_set.reserve(4);
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("42".to_string());
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("43".to_string());
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("44".to_string());
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("45".to_string());
+        assert_eq!(sparse_set.capacity(), 4);
+        sparse_set.push("46".to_string());
+        assert_eq!(sparse_set.capacity(), 8);
+    }
+
+    // sparse set of strings with two elements => reserve 4 and add 3 elements => all elements are added
+    #[test]
+    fn sparse_set_of_strings_with_two_elements_reserve_four_and_add_three_elements_all_elements_are_added(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(2);
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+
+        sparse_set.reserve(4);
+        let key3 = sparse_set.push("44".to_string());
+        let key4 = sparse_set.push("45".to_string());
+        let key5 = sparse_set.push("46".to_string());
+
+        assert_eq!(sparse_set.len(), 5);
+        assert_eq!(sparse_set.get_key(0), Some(key1));
+        assert_eq!(sparse_set.get_key(1), Some(key2));
+        assert_eq!(sparse_set.get_key(2), Some(key3));
+        assert_eq!(sparse_set.get_key(3), Some(key4));
+        assert_eq!(sparse_set.get_key(4), Some(key5));
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
     }
 
     // sparse set with ZST => try to create => panics

@@ -88,87 +88,12 @@ impl<T> SparseArrayStorage<T> {
         };
         let new_sparse_entry = SparseEntry::new_alive(old_dense_len, 0);
 
-        if let Some(previous_layout) = self.layout {
-            // check if we need to reallocate the buffer
-            if old_sparse_len == self.max_sparse_elements {
-                // dense is always equal or less in size than sparse
-                // so no need to check for dense_len
-
-                // need to reallocate the buffer
-                let new_max_sparse_elements = old_sparse_len * 2;
-                let exhausted_sparse_elements = old_sparse_len - old_dense_len;
-                let new_max_dense_elements = new_max_sparse_elements - exhausted_sparse_elements;
-
-                let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-                    size_of::<T>(),
-                    align_of::<T>(),
-                    new_max_dense_elements,
-                    new_max_sparse_elements,
-                );
-
-                if layout.is_none() || buffer.is_null() {
-                    panic!("Failed to allocate memory for the new buffer of SparseArrayStorage");
-                };
-
-                let new_dense_values_start_ptr = buffer as *mut T;
-                let new_dense_keys_start_ptr =
-                    unsafe { buffer.add(dense_keys_offset) as *mut SparseKey };
-                let new_sparse_start_ptr = unsafe { buffer.add(sparse_offset) as *mut SparseEntry };
-
-                // copy the old values
-                unsafe {
-                    std::ptr::copy_nonoverlapping(
-                        self.dense_values_start_ptr,
-                        new_dense_values_start_ptr,
-                        old_dense_len,
-                    );
-                    std::ptr::copy_nonoverlapping(
-                        self.dense_keys_start_ptr,
-                        new_dense_keys_start_ptr,
-                        old_dense_len,
-                    );
-                    std::ptr::copy_nonoverlapping(
-                        self.sparse_start_ptr,
-                        new_sparse_start_ptr,
-                        old_sparse_len,
-                    );
-                }
-
-                // deallocate the old buffer
-                Self::deallocate_buffer(self.buffer, previous_layout);
-
-                self.dense_values_start_ptr = buffer as *mut T;
-                self.dense_keys_start_ptr = new_dense_keys_start_ptr;
-                self.dense_len = old_dense_len;
-                self.sparse_start_ptr = new_sparse_start_ptr;
-                self.sparse_len = old_sparse_len;
-
-                self.max_dense_elements = new_max_dense_elements;
-                self.max_sparse_elements = new_max_sparse_elements;
-
-                self.buffer = buffer;
-                self.layout = layout;
+        if self.sparse_len == self.max_sparse_elements {
+            if self.max_sparse_elements != 0 {
+                self.reserve(self.max_sparse_elements);
+            } else {
+                self.reserve(Self::MIN_NON_ZERO_CAPACITY);
             }
-        } else {
-            // we never allocated the buffer before
-            let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
-                size_of::<T>(),
-                align_of::<T>(),
-                Self::MIN_NON_ZERO_CAPACITY,
-                Self::MIN_NON_ZERO_CAPACITY,
-            );
-
-            self.dense_values_start_ptr = buffer as *mut T;
-            self.dense_keys_start_ptr = unsafe { buffer.add(dense_keys_offset) as *mut SparseKey };
-            self.dense_len = 0;
-            self.sparse_start_ptr = unsafe { buffer.add(sparse_offset) as *mut SparseEntry };
-            self.sparse_len = 0;
-
-            self.max_dense_elements = Self::MIN_NON_ZERO_CAPACITY;
-            self.max_sparse_elements = Self::MIN_NON_ZERO_CAPACITY;
-
-            self.buffer = buffer;
-            self.layout = layout;
         }
 
         unsafe {
@@ -318,6 +243,94 @@ impl<T> SparseArrayStorage<T> {
 
     pub(crate) fn get_sparse_len(&self) -> usize {
         self.sparse_len
+    }
+
+    pub(crate) fn reserve(&mut self, additional: usize) {
+        let old_sparse_len = self.sparse_len;
+        let old_dense_len = self.dense_len;
+        let desired_capacity = old_sparse_len + additional;
+        if let Some(previous_layout) = self.layout {
+            // check if we need to reallocate the buffer
+            if self.max_sparse_elements < desired_capacity {
+                // dense is always equal or less in size than sparse
+                // so no need to check for dense_len
+
+                // need to reallocate the buffer
+                let new_max_sparse_elements = desired_capacity;
+                let exhausted_sparse_elements = old_sparse_len - old_dense_len;
+                let new_max_dense_elements = new_max_sparse_elements - exhausted_sparse_elements;
+
+                let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
+                    size_of::<T>(),
+                    align_of::<T>(),
+                    new_max_dense_elements,
+                    new_max_sparse_elements,
+                );
+
+                if layout.is_none() || buffer.is_null() {
+                    panic!("Failed to allocate memory for the new buffer of SparseArrayStorage");
+                };
+
+                let new_dense_values_start_ptr = buffer as *mut T;
+                let new_dense_keys_start_ptr =
+                    unsafe { buffer.add(dense_keys_offset) as *mut SparseKey };
+                let new_sparse_start_ptr = unsafe { buffer.add(sparse_offset) as *mut SparseEntry };
+
+                // copy the old values
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        self.dense_values_start_ptr,
+                        new_dense_values_start_ptr,
+                        old_dense_len,
+                    );
+                    std::ptr::copy_nonoverlapping(
+                        self.dense_keys_start_ptr,
+                        new_dense_keys_start_ptr,
+                        old_dense_len,
+                    );
+                    std::ptr::copy_nonoverlapping(
+                        self.sparse_start_ptr,
+                        new_sparse_start_ptr,
+                        old_sparse_len,
+                    );
+                }
+
+                // deallocate the old buffer
+                Self::deallocate_buffer(self.buffer, previous_layout);
+
+                self.dense_values_start_ptr = buffer as *mut T;
+                self.dense_keys_start_ptr = new_dense_keys_start_ptr;
+                self.dense_len = old_dense_len;
+                self.sparse_start_ptr = new_sparse_start_ptr;
+                self.sparse_len = old_sparse_len;
+
+                self.max_dense_elements = new_max_dense_elements;
+                self.max_sparse_elements = new_max_sparse_elements;
+
+                self.buffer = buffer;
+                self.layout = layout;
+            }
+        } else {
+            // we never allocated the buffer before
+            let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
+                size_of::<T>(),
+                align_of::<T>(),
+                desired_capacity,
+                desired_capacity,
+            );
+
+            self.dense_values_start_ptr = buffer as *mut T;
+            self.dense_keys_start_ptr = unsafe { buffer.add(dense_keys_offset) as *mut SparseKey };
+            self.dense_len = 0;
+            self.sparse_start_ptr = unsafe { buffer.add(sparse_offset) as *mut SparseEntry };
+            self.sparse_len = 0;
+
+            self.max_dense_elements = desired_capacity;
+            self.max_sparse_elements = desired_capacity;
+
+            self.buffer = buffer;
+            self.layout = layout;
+        }
     }
 
     fn allocate_new_buffer(
