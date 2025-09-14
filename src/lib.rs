@@ -346,6 +346,13 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Consumes the set and returns a vec with the values.
+    ///
+    /// O(n) time complexity.
+    pub fn into_vec(self) -> Vec<T> {
+        self.storage.into_dense_values()
+    }
+
     /// Returns a reference to the value stored at the given key.
     /// If the key is not valid, returns None.
     ///
@@ -1757,6 +1764,41 @@ mod tests {
         assert_eq!(sparse_set.get(key2), Some(&43));
     }
 
+    // empty sparse set => consume into vec => vec has 0 elements
+    #[test]
+    fn empty_sparse_set_consume_into_vec_has_0_elements() {
+        let sparse_set: SparseSet<i32> = SparseSet::new();
+
+        let vec: Vec<i32> = sparse_set.into_vec();
+
+        assert_eq!(vec, Vec::<i32>::new());
+    }
+
+    // sparse set with capacity 3 and 3 elements => consume into vec => vec has 2 elements
+    #[test]
+    fn sparse_set_with_capacity_three_and_three_elements_consume_into_vec_vec_has_two_elements() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(3);
+        sparse_set.push(1);
+        sparse_set.push(2);
+        sparse_set.push(3);
+
+        let vec: Vec<i32> = sparse_set.into_vec();
+
+        assert_eq!(vec, vec![1, 2, 3]);
+    }
+
+    // sparse set with capacity 3 and 2 elements => consume into vec => vec has 2 elements
+    #[test]
+    fn sparse_set_with_capacity_three_and_two_elements_consume_into_vec_vec_has_two_elements() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(3);
+        sparse_set.push(1);
+        sparse_set.push(2);
+
+        let vec: Vec<i32> = sparse_set.into_vec();
+
+        assert_eq!(vec, vec![1, 2]);
+    }
+
     // empty sparse set of strings => created => no items
     #[test]
     fn empty_sparse_set_of_strings_created_no_items() {
@@ -2929,6 +2971,43 @@ mod tests {
         assert_eq!(sparse_set.len(), 2);
         assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
         assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+    }
+
+    // empty sparse set of strings => consume into vec => vec has 0 elements
+    #[test]
+    fn empty_sparse_set_of_strings_consume_into_vec_has_0_elements() {
+        let sparse_set: SparseSet<String> = SparseSet::new();
+
+        let vec: Vec<String> = sparse_set.into_vec();
+
+        assert_eq!(vec, Vec::<String>::new());
+    }
+
+    // sparse set of strings with capacity 3 and 3 elements => consume into vec => vec has 2 elements
+    #[test]
+    fn sparse_set_of_strings_with_capacity_three_and_three_elements_consume_into_vec_vec_has_two_elements(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(3);
+        sparse_set.push("1".to_string());
+        sparse_set.push("2".to_string());
+        sparse_set.push("3".to_string());
+
+        let vec: Vec<String> = sparse_set.into_vec();
+
+        assert_eq!(vec, vec!["1".to_string(), "2".to_string(), "3".to_string()]);
+    }
+
+    // sparse set of strings with capacity 3 and 2 elements => consume into vec => vec has 2 elements
+    #[test]
+    fn sparse_set_of_strings_with_capacity_three_and_two_elements_consume_into_vec_vec_has_two_elements(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(3);
+        sparse_set.push("1".to_string());
+        sparse_set.push("2".to_string());
+
+        let vec: Vec<String> = sparse_set.into_vec();
+
+        assert_eq!(vec, vec!["1".to_string(), "2".to_string()]);
     }
 
     // sparse set with ZST => try to create => panics

@@ -209,6 +209,22 @@ impl<T> SparseArrayStorage<T> {
         }
     }
 
+    pub(crate) fn into_dense_values(mut self) -> Vec<T> {
+        // we are going to drop the set, so make sure we don't drop the values again
+        // after we moved them out
+        let count = self.dense_len;
+        self.dense_len = 0;
+
+        let mut out = Vec::with_capacity(count);
+        let src = self.dense_values_start_ptr;
+        unsafe {
+            let dst: *mut T = out.as_mut_ptr();
+            std::ptr::copy_nonoverlapping(src, dst, count);
+            out.set_len(count);
+        }
+        out
+    }
+
     pub(crate) fn get_dense_values(&self) -> &[T] {
         unsafe { std::slice::from_raw_parts(self.dense_values_start_ptr, self.dense_len) }
     }
