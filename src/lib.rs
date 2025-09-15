@@ -66,6 +66,15 @@ impl<T> SparseSet<T> {
         }
     }
 
+    /// Creates a new `SparseSet<T>` from a `Vec<T>`.
+    ///
+    /// O(n) time complexity.
+    pub fn from_vec(vec: Vec<T>) -> Self {
+        let mut result = Self::with_capacity(vec.len());
+        result.extend_with_vec(vec);
+        result
+    }
+
     /// Reserves capacity for at least `additional` more elements to be inserted
     /// in the given `SparseSet<T>`.
     ///
@@ -569,6 +578,25 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // empty vec => create sparse set from vec => sparse set is empty
+    #[test]
+    fn empty_vec_create_sparse_set_from_vec_sparse_set_is_empty() {
+        let sparse_set: SparseSet<i32> = SparseSet::from_vec(vec![]);
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // vec with 3 values => create sparse set from vec => sparse set has 3 items
+    #[test]
+    fn vec_with_three_values_create_sparse_set_from_vec_sparse_set_has_three_items() {
+        let sparse_set: SparseSet<i32> = SparseSet::from_vec(vec![1, 2, 3]);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_by_index(0), Some(&1));
+        assert_eq!(sparse_set.get_by_index(1), Some(&2));
+        assert_eq!(sparse_set.get_by_index(2), Some(&3));
     }
 
     // sparse set with three items => get key => the expected key is returned
@@ -1844,6 +1872,26 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // empty vec => create sparse set of strings from vec => sparse set is empty
+    #[test]
+    fn empty_vec_create_sparse_set_of_strings_from_vec_sparse_set_is_empty() {
+        let sparse_set: SparseSet<String> = SparseSet::from_vec(vec![]);
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // vec with 3 values => create sparse set of strings from vec => sparse set has 3 items
+    #[test]
+    fn vec_with_three_values_create_sparse_set_of_strings_from_vec_sparse_set_has_three_items() {
+        let sparse_set: SparseSet<String> =
+            SparseSet::from_vec(vec!["1".to_string(), "2".to_string(), "3".to_string()]);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get_by_index(0), Some(&"1".to_string()));
+        assert_eq!(sparse_set.get_by_index(1), Some(&"2".to_string()));
+        assert_eq!(sparse_set.get_by_index(2), Some(&"3".to_string()));
     }
 
     // sparse set of strings with three items => get key => the expected key is returned
