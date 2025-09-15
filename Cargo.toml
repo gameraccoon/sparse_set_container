@@ -1,6 +1,6 @@
 [package]
 name = "sparse_set_container"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 authors = ["Pavel Grebnev"]
 description = "A container based on sparse set. Stable keys, O(1) lookup, cache-friendly iterations, and no hashing."
