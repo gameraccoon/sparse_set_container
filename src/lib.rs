@@ -207,6 +207,24 @@ impl<T> SparseSet<T> {
         self.remove(key)
     }
 
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// Or in other words, remove all elements that don't satisfy the predicate.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the predicate panics.
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&T) -> bool,
+    {
+        for i in (0..self.storage.get_dense_len()).rev() {
+            if !f(&self.storage.get_dense_values()[i]) {
+                self.remove_by_index(i);
+            }
+        }
+    }
+
     /// Removes all the elements from the set.
     ///
     /// O(n) time complexity.
@@ -1051,6 +1069,48 @@ mod tests {
         sparse_set.push(43);
 
         sparse_set.remove_by_index(2);
+    }
+
+    // sparse set with no items => retain => no items
+    #[test]
+    fn sparse_set_with_no_items_retain_no_items() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        sparse_set.retain(|&x| x != 42);
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set with three items => retain to leave one item => one item left
+    #[test]
+    fn sparse_set_with_three_items_retain_to_leave_one_item_one_item_left() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.retain(|&x| x == 43);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), None);
+    }
+
+    // sparse set with three items => retain to leave two items => two items left
+    #[test]
+    fn sparse_set_with_three_items_retain_to_leave_two_items_two_items_left() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.retain(|&x| x != 43);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&44));
     }
 
     // sparse set with three items => clear => no items
@@ -2371,6 +2431,48 @@ mod tests {
         sparse_set.push("43".to_string());
 
         sparse_set.remove_by_index(2);
+    }
+
+    // sparse set of strings with no items => retain => no items
+    #[test]
+    fn sparse_set_of_strings_with_no_items_retain_no_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.retain(|x| *x != "42".to_string());
+
+        assert_eq!(sparse_set.len(), 0);
+    }
+
+    // sparse set of strings with three items => retain to leave one item => one item left
+    #[test]
+    fn sparse_set_of_strings_with_three_items_retain_to_leave_one_item_one_item_left() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.retain(|x| *x == "43".to_string());
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get(key1), None);
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), None);
+    }
+
+    // sparse set of strings with three items => retain to leave two items => two items left
+    #[test]
+    fn sparse_set_of_strings_with_three_items_retain_to_leave_two_items_two_items_left() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.retain(|x| *x != "43".to_string());
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
     }
 
     // sparse set of strings with three items => clear => no items
