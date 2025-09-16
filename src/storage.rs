@@ -76,17 +76,17 @@ impl<T> SparseArrayStorage<T> {
 
     /// # Safety
     ///
+    /// - Providing position out of bounds of alive keys/values can lead to UB
     /// - Calling this function when there are free sparse entries left
     /// can lead to an inconsistent state of the storage that can later lead to UB
-    pub(crate) fn add_with_new_sparse_item(&mut self, value: T) -> SparseKey {
+    pub(crate) fn insert_with_new_sparse_item(&mut self, position: usize, value: T) -> SparseKey {
         let old_sparse_len = self.sparse_len;
-        let old_dense_len = self.dense_len;
 
         let key = SparseKey {
             sparse_index: old_sparse_len,
             epoch: 0,
         };
-        let new_sparse_entry = SparseEntry::new_alive(old_dense_len, 0);
+        let new_sparse_entry = SparseEntry::new_alive(position, 0);
 
         if self.sparse_len == self.max_sparse_elements {
             if self.max_sparse_elements != 0 {
@@ -96,9 +96,13 @@ impl<T> SparseArrayStorage<T> {
             }
         }
 
+        if position != self.dense_len {
+            self.shift_dense_values_to_the_right(position, self.dense_len, 1);
+        }
+
         unsafe {
-            std::ptr::write(self.dense_values_start_ptr.add(old_dense_len), value);
-            std::ptr::write(self.dense_keys_start_ptr.add(old_dense_len), key);
+            std::ptr::write(self.dense_values_start_ptr.add(position), value);
+            std::ptr::write(self.dense_keys_start_ptr.add(position), key);
             std::ptr::write(self.sparse_start_ptr.add(old_sparse_len), new_sparse_entry);
         }
 
@@ -110,23 +114,30 @@ impl<T> SparseArrayStorage<T> {
 
     /// # Safety
     ///
-    /// Providing incorrect key can lead to UB
-    pub(crate) fn add_with_existing_sparse_item(&mut self, key: SparseKey, value: T) {
-        let dense_index = self.dense_len;
-
+    /// Providing position out of bounds of alive keys/values can lead to UB
+    pub(crate) fn insert_with_existing_sparse_item(
+        &mut self,
+        position: usize,
+        key: SparseKey,
+        value: T,
+    ) {
         // no need to grow the buffer, since we know that if we have sparse entities available
         // we also have space in the dense array
 
+        if position != self.dense_len {
+            self.shift_dense_values_to_the_right(position, self.dense_len, 1);
+        }
+
         unsafe {
-            std::ptr::write(self.dense_values_start_ptr.add(dense_index), value);
-            std::ptr::write(self.dense_keys_start_ptr.add(dense_index), key);
+            std::ptr::write(self.dense_values_start_ptr.add(position), value);
+            std::ptr::write(self.dense_keys_start_ptr.add(position), key);
         }
 
         self.dense_len += 1;
 
         unsafe {
             let sparse_entry = self.sparse_start_ptr.add(key.sparse_index);
-            *sparse_entry = SparseEntry::new_alive(dense_index, key.epoch);
+            *sparse_entry = SparseEntry::new_alive(position, key.epoch);
         }
     }
 
@@ -350,6 +361,26 @@ impl<T> SparseArrayStorage<T> {
 
             self.buffer = buffer;
             self.layout = layout;
+        }
+    }
+
+    fn shift_dense_values_to_the_right(
+        &mut self,
+        start_index: usize,
+        end_index: usize,
+        shift_by: usize,
+    ) {
+        unsafe {
+            std::ptr::copy(
+                self.dense_values_start_ptr.add(start_index),
+                self.dense_values_start_ptr.add(start_index + shift_by),
+                end_index - start_index,
+            );
+            std::ptr::copy(
+                self.dense_keys_start_ptr.add(start_index),
+                self.dense_keys_start_ptr.add(start_index + shift_by),
+                end_index - start_index,
+            );
         }
     }
 

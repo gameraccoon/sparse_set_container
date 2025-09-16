@@ -99,24 +99,25 @@ impl<T> SparseSet<T> {
     ///
     /// Panics if a memory allocation fails.
     pub fn push(&mut self, value: T) -> SparseKey {
-        // if there are free entries in the sparse array, use one of them
-        if self.next_free_sparse_entry != MAX_SPARSE_INDEX {
-            let new_sparse_index = self.next_free_sparse_entry;
-            let free_sparse_entry = self.storage.get_sparse()[new_sparse_index];
-            self.next_free_sparse_entry = free_sparse_entry.next_free();
+        self.insert_at_position_unchecked(self.storage.get_dense_len(), value)
+    }
 
-            let key = SparseKey {
-                sparse_index: new_sparse_index,
-                epoch: free_sparse_entry.next_epoch(),
-            };
+    /// Inserts an element at the specified position in the set shifting all elements after it to the right.
+    /// Returns the key of the inserted element.
+    ///
+    /// O(n) time complexity.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the position is greater than the length of the set.
+    pub fn insert_at_position(&mut self, position: usize, value: T) -> SparseKey {
+        assert!(position <= self.len());
 
-            self.storage.add_with_existing_sparse_item(key, value);
-
-            key
-        } else {
-            // extend the sparse array
-            self.storage.add_with_new_sparse_item(value)
+        let key = self.insert_at_position_unchecked(position, value);
+        for i in position + 1..self.storage.get_dense_len() {
+            self.project_dense_key_to_sparse(i);
         }
+        key
     }
 
     /// Removes an element from the set using the key, swapping it with the last element.
@@ -513,6 +514,29 @@ impl<T> SparseSet<T> {
             .zip(self.storage.get_dense_values().iter())
     }
 
+    /// Safety: Can UB if the position is greater than the length of the dense array.
+    fn insert_at_position_unchecked(&mut self, position: usize, value: T) -> SparseKey {
+        // if there are free entries in the sparse array, use one of them
+        if self.next_free_sparse_entry != MAX_SPARSE_INDEX {
+            let new_sparse_index = self.next_free_sparse_entry;
+            let free_sparse_entry = self.storage.get_sparse()[new_sparse_index];
+            self.next_free_sparse_entry = free_sparse_entry.next_free();
+
+            let key = SparseKey {
+                sparse_index: new_sparse_index,
+                epoch: free_sparse_entry.next_epoch(),
+            };
+
+            self.storage
+                .insert_with_existing_sparse_item(position, key, value);
+
+            key
+        } else {
+            // extend the sparse array
+            self.storage.insert_with_new_sparse_item(position, value)
+        }
+    }
+
     fn mark_as_free(&mut self, key: SparseKey) {
         self.storage.get_sparse_mut()[key.sparse_index].mark_free(self.next_free_sparse_entry);
 
@@ -578,6 +602,61 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // empty sparse set => insert item at zero position => has one item
+    #[test]
+    fn empty_sparse_set_insert_item_at_zero_position_has_one_item() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        let key = sparse_set.insert_at_position(0, 42);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // empty sparse set with capacity => insert item at zero position => has one item
+    #[test]
+    fn empty_sparse_set_with_capacity_insert_item_at_zero_position_has_one_item() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(1);
+
+        let key = sparse_set.insert_at_position(0, 42);
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&42));
+    }
+
+    // sparse set with 3 items => insert item in the middle => sparse set has 4 items
+    #[test]
+    fn sparse_set_with_three_items_insert_item_in_the_middle_sparse_set_has_four_items() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(3);
+        let key1 = sparse_set.insert_at_position(0, 41);
+        let key2 = sparse_set.insert_at_position(1, 42);
+        let key3 = sparse_set.insert_at_position(2, 43);
+
+        let new_key = sparse_set.insert_at_position(1, 44);
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_by_index(0), Some(&41));
+        assert_eq!(sparse_set.get_by_index(1), Some(&44));
+        assert_eq!(sparse_set.get_by_index(2), Some(&42));
+        assert_eq!(sparse_set.get_by_index(3), Some(&43));
+        assert_eq!(sparse_set.get(key1), Some(&41));
+        assert_eq!(sparse_set.get(key2), Some(&42));
+        assert_eq!(sparse_set.get(key3), Some(&43));
+        assert_eq!(sparse_set.get(new_key), Some(&44));
+    }
+
+    // sparse set with 1 item => insert item at incorrect position => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_with_one_item_insert_item_at_incorrect_position_panics() {
+        let mut sparse_set = SparseSet::new();
+        sparse_set.push(42);
+
+        sparse_set.insert_at_position(2, 41);
     }
 
     // empty vec => create sparse set from vec => sparse set is empty
@@ -1872,6 +1951,62 @@ mod tests {
         assert_eq!(sparse_set.len(), 1);
         assert_eq!(sparse_set.get_key(0), Some(key));
         assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // empty sparse set of strings => insert item at zero position => has one item
+    #[test]
+    fn empty_sparse_set_of_strings_insert_item_at_zero_position_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        let key = sparse_set.insert_at_position(0, "42".to_string());
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // empty sparse set of strings with capacity => insert item at zero position => has one item
+    #[test]
+    fn empty_sparse_set_of_strings_with_capacity_insert_item_at_zero_position_has_one_item() {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(1);
+
+        let key = sparse_set.insert_at_position(0, "42".to_string());
+
+        assert_eq!(sparse_set.len(), 1);
+        assert_eq!(sparse_set.get_key(0), Some(key));
+        assert_eq!(sparse_set.get(key), Some(&"42".to_string()));
+    }
+
+    // sparse set of strings with 3 items => insert item in the middle => sparse set has 4 items
+    #[test]
+    fn sparse_set_of_strings_with_three_items_insert_item_in_the_middle_sparse_set_has_four_items()
+    {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(3);
+        let key1 = sparse_set.insert_at_position(0, "41".to_string());
+        let key2 = sparse_set.insert_at_position(1, "42".to_string());
+        let key3 = sparse_set.insert_at_position(2, "43".to_string());
+
+        let new_key = sparse_set.insert_at_position(1, "44".to_string());
+
+        assert_eq!(sparse_set.len(), 4);
+        assert_eq!(sparse_set.get_by_index(0), Some(&"41".to_string()));
+        assert_eq!(sparse_set.get_by_index(1), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get_by_index(2), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get_by_index(3), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key1), Some(&"41".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key3), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(new_key), Some(&"44".to_string()));
+    }
+
+    // sparse set of strings with 1 item => insert item at incorrect position => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_of_strings_with_one_item_insert_item_at_incorrect_position_panics() {
+        let mut sparse_set = SparseSet::<String>::new();
+        sparse_set.push("42".to_string());
+
+        sparse_set.insert_at_position(2, "41".to_string());
     }
 
     // empty vec => create sparse set of strings from vec => sparse set is empty
