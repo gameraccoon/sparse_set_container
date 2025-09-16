@@ -120,6 +120,23 @@ impl<T> SparseSet<T> {
         key
     }
 
+    /// Changes the length of the vector, inserting or removing values at the end as needed.
+    pub fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        if new_len > self.storage.get_dense_len() {
+            self.reserve(new_len - self.storage.get_dense_len());
+            for i in self.storage.get_dense_len()..new_len {
+                self.insert_at_position_unchecked(i, value.clone());
+            }
+        } else {
+            for i in new_len..self.storage.get_dense_len() {
+                self.remove_by_index(i);
+            }
+        }
+    }
+
     /// Removes an element from the set using the key, swapping it with the last element.
     /// Returns the removed value if it was present in the set.
     ///
@@ -675,6 +692,45 @@ mod tests {
         sparse_set.push(42);
 
         sparse_set.insert_at_position(2, 41);
+    }
+
+    // empty sparse set => resize to 0 => sparse set is empty
+    #[test]
+    fn empty_sparse_set_resize_to_0_sparse_set_is_empty() {
+        let mut sparse_set = SparseSet::new();
+
+        sparse_set.resize(0, 42);
+
+        assert!(sparse_set.is_empty());
+    }
+
+    // empty sparse set => resize to 10 => sparse set has 10 identical items
+    #[test]
+    fn empty_sparse_set_resize_to_ten_sparse_set_has_ten_identical_items() {
+        let mut sparse_set = SparseSet::new();
+
+        sparse_set.resize(10, 42);
+
+        assert_eq!(sparse_set.len(), 10);
+        for i in 0..10 {
+            assert_eq!(sparse_set.get_by_index(i), Some(&42));
+        }
+    }
+
+    // sparse set with 3 items => resize to 2 items => sparse set has 2 items
+    #[test]
+    fn sparse_set_with_three_items_resize_to_two_items_sparse_set_has_two_items() {
+        let mut sparse_set = SparseSet::new();
+        let key1 = sparse_set.push(42);
+        let key2 = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        sparse_set.resize(2, 45);
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2), Some(&43));
+        assert_eq!(sparse_set.get(key3), None);
     }
 
     // empty vec => create sparse set from vec => sparse set is empty
@@ -2063,10 +2119,49 @@ mod tests {
     #[test]
     #[should_panic]
     fn sparse_set_of_strings_with_one_item_insert_item_at_incorrect_position_panics() {
-        let mut sparse_set = SparseSet::<String>::new();
+        let mut sparse_set = SparseSet::new();
         sparse_set.push("42".to_string());
 
         sparse_set.insert_at_position(2, "41".to_string());
+    }
+
+    // empty sparse set of strings => resize to 0 => sparse set is empty
+    #[test]
+    fn empty_sparse_set_of_strings_resize_to_0_sparse_set_is_empty() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.resize(0, "42".to_string());
+
+        assert!(sparse_set.is_empty());
+    }
+
+    // empty sparse set of strings => resize to 10 => sparse set has 10 identical items
+    #[test]
+    fn empty_sparse_set_of_strings_resize_to_ten_sparse_set_has_ten_identical_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+
+        sparse_set.resize(10, "42".to_string());
+
+        assert_eq!(sparse_set.len(), 10);
+        for i in 0..10 {
+            assert_eq!(sparse_set.get_by_index(i), Some(&"42".to_string()));
+        }
+    }
+
+    // sparse set of strings with 3 items => resize to 2 items => sparse set has 2 items
+    #[test]
+    fn sparse_set_of_strings_with_three_items_resize_to_two_items_sparse_set_has_two_items() {
+        let mut sparse_set: SparseSet<String> = SparseSet::new();
+        let key1 = sparse_set.push("42".to_string());
+        let key2 = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        sparse_set.resize(2, "45".to_string());
+
+        assert_eq!(sparse_set.len(), 2);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2), Some(&"43".to_string()));
+        assert_eq!(sparse_set.get(key3), None);
     }
 
     // empty vec => create sparse set of strings from vec => sparse set is empty
