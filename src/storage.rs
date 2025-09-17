@@ -421,6 +421,11 @@ impl<T> SparseArrayStorage<T> {
         let size_of_buffer = sparse_end
             + (align_of_buffer - buffer_size_reminder) * (buffer_size_reminder != 0) as usize;
 
+        // check for isize overflow (prerequisite for from_size_align)
+        assert!(size_of_buffer <= isize::MAX as usize);
+        assert!(align_of_buffer <= isize::MAX as usize);
+        assert!(size_of_buffer + align_of_buffer <= isize::MAX as usize);
+
         let layout: Option<std::alloc::Layout>;
         let mut buffer: *mut u8 = std::ptr::null_mut();
         unsafe {

@@ -57,7 +57,7 @@ impl<T> SparseSet<T> {
     /// # Panics
     ///
     /// - Panics if the type `T` is zero-sized.
-    /// - Panics if the memory allocation fails.
+    /// - Panics if the new buffer size exceeds `isize::MAX` _bytes_.
     pub fn with_capacity(capacity: usize) -> Self {
         assert!(size_of::<T>() > 0, "Zero-sized types are not supported");
         Self {
@@ -82,7 +82,7 @@ impl<T> SparseSet<T> {
     ///
     /// # Panics
     ///
-    /// May panic if the capacity overflows isize.
+    /// Panics if the buffer size exceeds `isize::MAX` _bytes_.
     pub fn reserve(&mut self, additional: usize) {
         self.storage.reserve(additional);
     }
@@ -97,7 +97,7 @@ impl<T> SparseSet<T> {
     ///
     /// # Panics
     ///
-    /// Panics if a memory allocation fails.
+    /// Panics if the new buffer size exceeds `isize::MAX` _bytes_.
     pub fn push(&mut self, value: T) -> SparseKey {
         self.insert_at_position_unchecked(self.storage.get_dense_len(), value)
     }
@@ -3412,6 +3412,15 @@ mod tests {
 
         let sparse_set: SparseSet<&'static str> = SparseSet::new();
         accepting_sparse_set_of_string_with_lifetime(&sparse_set);
+    }
+
+    // sparse set => try to resize to a value greater than isize::MAX => panics
+    #[test]
+    #[should_panic]
+    fn sparse_set_try_to_resize_to_a_value_greater_than_isize_max_panics() {
+        let mut sparse_set: SparseSet<i32> = SparseSet::new();
+
+        sparse_set.resize(isize::MAX as usize + 1, 42);
     }
 
     // sparse set => check is send => true
