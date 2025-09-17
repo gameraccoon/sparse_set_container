@@ -12,8 +12,8 @@ E.g. you have a list of elements in UI that the user can add and remove, but you
 <!--badge links start-->
 [crates.io shield]: https://img.shields.io/crates/v/sparse_set_container?label=latest
 [crates.io link]: https://crates.io/crates/sparse_set_container
-[docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version=1.2.1
-[docs.rs link]: https://docs.rs/sparse_set_container/1.2.1/sparse_set_container/
+[docs.rs badge]: https://docs.rs/sparse_set_container/badge.svg?version=1.2.2
+[docs.rs link]: https://docs.rs/sparse_set_container/1.2.2/sparse_set_container/
 [shields.io download count]: https://img.shields.io/crates/d/sparse_set_container.svg
 <!--badge links end-->
 
