@@ -474,6 +474,11 @@ impl<T> SparseSet<T> {
         sparse_entry.is_alive() && sparse_entry.epoch() == key.epoch
     }
 
+    /// A convenience method that returns true if the given index is within the bounds of the set.
+    pub fn is_valid_index(&self, index: usize) -> bool {
+        index < self.storage.get_sparse_len()
+    }
+
     /// Returns the number of elements in the set.
     ///
     /// O(1) time complexity.
@@ -586,6 +591,21 @@ impl<T> SparseSet<T> {
         // and it is the sparse key that needs to be updated to keep pointing to the expected value
         let key = self.storage.get_dense_keys()[dense_index];
         self.storage.get_sparse_mut()[key.sparse_index].replace_pointed_to_value(dense_index);
+    }
+
+    #[cfg(test)]
+    fn test_only_set_sparse_epoch_by_index(
+        &mut self,
+        dense_index: usize,
+        epoch: usize,
+    ) -> SparseKey {
+        assert!(self.is_valid_index(dense_index));
+
+        self.storage.get_dense_keys_mut()[dense_index].epoch = epoch;
+        let sparse_index = self.storage.get_dense_keys_mut()[dense_index].sparse_index;
+        self.storage.get_sparse_mut()[sparse_index] =
+            sparse_entry::SparseEntry::new_alive(dense_index, epoch);
+        self.storage.get_dense_keys()[dense_index]
     }
 }
 
@@ -2022,6 +2042,56 @@ mod tests {
         assert_eq!(vec, vec![1, 2]);
     }
 
+    // sparse set with three elements => remove and add one beyond max epoch => sparse set is still valid
+    #[test]
+    fn sparse_set_with_three_elements_remove_and_add_one_beyond_max_epoch_sparse_set_is_still_valid(
+    ) {
+        let mut sparse_set: SparseSet<i32> = SparseSet::with_capacity(3);
+        let key1 = sparse_set.push(42);
+        let key2_original = sparse_set.push(43);
+        let key3 = sparse_set.push(44);
+
+        // this makes the old key invalid
+        let key2 = sparse_set.test_only_set_sparse_epoch_by_index(1, MAX_EPOCH);
+        assert_eq!(sparse_set.contains(key2), true); // to make sure we are testing the valid thing
+        sparse_set.remove(key2);
+        let key4 = sparse_set.push(45);
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2_original), None);
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+        assert_eq!(sparse_set.get_by_index(0), Some(&42));
+        assert_eq!(sparse_set.get_by_index(1), Some(&44));
+        assert_eq!(sparse_set.get_by_index(2), Some(&45));
+        assert_eq!(sparse_set.capacity(), 6);
+        // try to grow to the next reallocation to test more corner cases
+        let key5 = sparse_set.push(46);
+        let key6 = sparse_set.push(47);
+        let key7 = sparse_set.push(48);
+        let key8 = sparse_set.push(49);
+        assert_eq!(sparse_set.len(), 7);
+        assert_eq!(sparse_set.get(key1), Some(&42));
+        assert_eq!(sparse_set.get(key2_original), None);
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&44));
+        assert_eq!(sparse_set.get(key4), Some(&45));
+        assert_eq!(sparse_set.get(key5), Some(&46));
+        assert_eq!(sparse_set.get(key6), Some(&47));
+        assert_eq!(sparse_set.get(key7), Some(&48));
+        assert_eq!(sparse_set.get(key8), Some(&49));
+        assert_eq!(sparse_set.get_by_index(0), Some(&42));
+        assert_eq!(sparse_set.get_by_index(1), Some(&44));
+        assert_eq!(sparse_set.get_by_index(2), Some(&45));
+        assert_eq!(sparse_set.get_by_index(3), Some(&46));
+        assert_eq!(sparse_set.get_by_index(4), Some(&47));
+        assert_eq!(sparse_set.get_by_index(5), Some(&48));
+        assert_eq!(sparse_set.get_by_index(6), Some(&49));
+        assert_eq!(sparse_set.capacity(), 12);
+    }
+
     // empty sparse set of strings => created => no items
     #[test]
     fn empty_sparse_set_of_strings_created_no_items() {
@@ -3388,6 +3458,56 @@ mod tests {
         let vec: Vec<String> = sparse_set.into_vec();
 
         assert_eq!(vec, vec!["1".to_string(), "2".to_string()]);
+    }
+
+    // sparse set of strings with three elements => remove and add one beyond max epoch => sparse set is still valid
+    #[test]
+    fn sparse_set_of_strings_with_three_elements_remove_and_add_one_beyond_max_epoch_sparse_set_is_still_valid(
+    ) {
+        let mut sparse_set: SparseSet<String> = SparseSet::with_capacity(3);
+        let key1 = sparse_set.push("42".to_string());
+        let key2_original = sparse_set.push("43".to_string());
+        let key3 = sparse_set.push("44".to_string());
+
+        // this makes the old key invalid
+        let key2 = sparse_set.test_only_set_sparse_epoch_by_index(1, MAX_EPOCH);
+        assert_eq!(sparse_set.contains(key2), true); // to make sure we are testing the valid thing
+        sparse_set.remove(key2);
+        let key4 = sparse_set.push("45".to_string());
+
+        assert_eq!(sparse_set.len(), 3);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2_original), None);
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get_by_index(0), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get_by_index(1), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get_by_index(2), Some(&"45".to_string()));
+        assert_eq!(sparse_set.capacity(), 6);
+        // try to grow to the next reallocation to test more corner cases
+        let key5 = sparse_set.push("46".to_string());
+        let key6 = sparse_set.push("47".to_string());
+        let key7 = sparse_set.push("48".to_string());
+        let key8 = sparse_set.push("49".to_string());
+        assert_eq!(sparse_set.len(), 7);
+        assert_eq!(sparse_set.get(key1), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get(key2_original), None);
+        assert_eq!(sparse_set.get(key2), None);
+        assert_eq!(sparse_set.get(key3), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get(key4), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get(key5), Some(&"46".to_string()));
+        assert_eq!(sparse_set.get(key6), Some(&"47".to_string()));
+        assert_eq!(sparse_set.get(key7), Some(&"48".to_string()));
+        assert_eq!(sparse_set.get(key8), Some(&"49".to_string()));
+        assert_eq!(sparse_set.get_by_index(0), Some(&"42".to_string()));
+        assert_eq!(sparse_set.get_by_index(1), Some(&"44".to_string()));
+        assert_eq!(sparse_set.get_by_index(2), Some(&"45".to_string()));
+        assert_eq!(sparse_set.get_by_index(3), Some(&"46".to_string()));
+        assert_eq!(sparse_set.get_by_index(4), Some(&"47".to_string()));
+        assert_eq!(sparse_set.get_by_index(5), Some(&"48".to_string()));
+        assert_eq!(sparse_set.get_by_index(6), Some(&"49".to_string()));
+        assert_eq!(sparse_set.capacity(), 12);
     }
 
     // sparse set with ZST => try to create => panics

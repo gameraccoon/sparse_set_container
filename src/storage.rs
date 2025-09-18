@@ -90,7 +90,7 @@ impl<T> SparseArrayStorage<T> {
 
         if self.sparse_len == self.max_sparse_elements {
             if self.max_sparse_elements != 0 {
-                self.reserve(self.max_sparse_elements);
+                self.reserve(self.max_dense_elements * 2 - self.dense_len);
             } else {
                 self.reserve(Self::MIN_NON_ZERO_CAPACITY);
             }
@@ -279,7 +279,7 @@ impl<T> SparseArrayStorage<T> {
 
         let old_sparse_len = self.sparse_len;
         let old_dense_len = self.dense_len;
-        let desired_capacity = old_sparse_len + additional;
+        let desired_capacity = old_dense_len + additional;
         if let Some(previous_layout) = self.layout {
             // check if we need to reallocate the buffer
             if self.max_sparse_elements < desired_capacity {
@@ -287,9 +287,9 @@ impl<T> SparseArrayStorage<T> {
                 // so no need to check for dense_len
 
                 // need to reallocate the buffer
-                let new_max_sparse_elements = desired_capacity;
                 let exhausted_sparse_elements = old_sparse_len - old_dense_len;
-                let new_max_dense_elements = new_max_sparse_elements - exhausted_sparse_elements;
+                let new_max_dense_elements = desired_capacity;
+                let new_max_sparse_elements = new_max_dense_elements + exhausted_sparse_elements;
 
                 let (layout, buffer, dense_keys_offset, sparse_offset) = Self::allocate_new_buffer(
                     size_of::<T>(),
