@@ -90,17 +90,17 @@ fn main() {
 The values captured illustrate the difference between this SparseSet container implementation, Vec, and standard HashMap, as well as comparing to other libraries with similar functionality.
 
 <!--benchmark table start-->
-| Benchmark                    | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` | `thunderdome::Arena<String>` | `generational_arena::Arena<String>` | `slotmap::SlotMap<_, String>` | `slotmap::DenseSlotMap<_, String>` |
-|------------------------------|---------------------|---------------|------------------------|------------------------------|-------------------------------------|-------------------------------|------------------------------------|
-| Create empty                 | 0 ns ±0             | 0 ns ±0       | 2 ns ±0                | 0 ns ±0                      | 15 ns ±0                            | 8 ns ±0                       | 8 ns ±0                            |
-| Create with capacity (1000)  | 20 ns ±0            | 19 ns ±0      | 37 ns ±0               | 19 ns ±0                     | 693 ns ±2                           | 19 ns ±0                      | 53 ns ±0                           |
-| Push 100 elements            | 3,612 ns ±11        | 3,499 ns ±11  | 5,537 ns ±30           | 3,631 ns ±12                 | 3,623 ns ±8                         | 3,552 ns ±13                  | 4,175 ns ±18                       |
-| With capacity push 100       | 3,411 ns ±21        | 3,335 ns ±19  | 4,570 ns ±32           | 3,490 ns ±24                 | 3,418 ns ±17                        | 3,375 ns ±24                  | 3,637 ns ±14                       |
-| Lookup 100 elements          | 94 ns ±1            | 44 ns ±6      | 474 ns ±25             | 83 ns ±1                     | 82 ns ±1                            | 68 ns ±1                      | 89 ns ±3                           |
-| Iterate over 100 elements    | 32 ns ±0            | 32 ns ±0      | 44 ns ±0               | 98 ns ±0                     | 73 ns ±0                            | 39 ns ±2                      | 33 ns ±0                           |
-| Clone with 100 elements      | 2,621 ns ±18        | 2,565 ns ±17  | 1,629 ns ±39           | 2,594 ns ±31                 | 2,659 ns ±18                        | 2,620 ns ±19                  | 2,660 ns ±14                       |
-| Clone 100 and remove 10      | 3,416 ns ±75        | 2,611 ns ±43  | 1,797 ns ±113          | 2,697 ns ±77                 | 2,762 ns ±76                        | 2,730 ns ±85                  | 2,708 ns ±65                       |
-| Clone 100 and swap_remove 10 | 2,698 ns ±66        | 2,401 ns ±30  | N/A                    | N/A                          | N/A                                 | N/A                           | N/A                                |
+| Benchmark | `SparseSet<String>` | `Vec<String>` | `HashMap<i32, String>` | `thunderdome::Arena<String>` | `generational_arena::Arena<String>` | `slotmap::SlotMap<_, String>` | `slotmap::DenseSlotMap<_, String>` |
+| --- | --- | --- | --- | --- | --- | --- | ---|
+| Create empty | 0 ns ±0 | 0 ns ±0 | 2 ns ±0 | 0 ns ±0 | 15 ns ±0 | 8 ns ±0 | 9 ns ±0 |
+| Create with capacity (1000) | 20 ns ±0 | 20 ns ±0 | 37 ns ±0 | 20 ns ±0 | 686 ns ±3 | 20 ns ±0 | 54 ns ±0 |
+| Push 100 elements | 2,849 ns ±11 | 2,738 ns ±12 | 4,714 ns ±24 | 2,870 ns ±15 | 2,919 ns ±10 | 2,802 ns ±17 | 3,380 ns ±14 |
+| With capacity push 100 | 2,724 ns ±14 | 2,637 ns ±14 | 3,644 ns ±19 | 2,737 ns ±14 | 2,740 ns ±11 | 2,690 ns ±10 | 2,859 ns ±12 |
+| Lookup 100 elements | 94 ns ±0 | 39 ns ±3 | 474 ns ±26 | 82 ns ±0 | 81 ns ±1 | 68 ns ±0 | 90 ns ±4 |
+| Iterate over 100 elements | 32 ns ±0 | 32 ns ±0 | 44 ns ±0 | 98 ns ±1 | 73 ns ±0 | 38 ns ±0 | 33 ns ±0 |
+| Clone with 100 elements | 2,654 ns ±11 | 2,574 ns ±10 | 1,663 ns ±34 | 2,620 ns ±20 | 2,666 ns ±17 | 2,655 ns ±20 | 2,691 ns ±14 |
+| Clone 100 and remove 10 | 3,334 ns ±69 | 2,646 ns ±35 | 1,839 ns ±139 | 2,788 ns ±91 | 2,823 ns ±64 | 2,805 ns ±83 | 2,774 ns ±80 |
+| Clone 100 and swap_remove 10 | 2,749 ns ±91 | 2,489 ns ±61 | N/A | N/A | N/A | N/A | N/A |
 <!--benchmark table end-->
 
 To run the benchmark on your machine, execute `cargo run --example bench --release`
