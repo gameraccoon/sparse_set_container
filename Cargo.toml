@@ -17,4 +17,4 @@ bencher = "0.1.5"
 # to compare in benchmarks
 thunderdome = "0.6.1"
 generational-arena = "0.2.9"
-slotmap = "1.0.7"
+slotmap = "1.1.1"
