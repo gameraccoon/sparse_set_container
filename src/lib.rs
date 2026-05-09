@@ -609,14 +609,31 @@ impl<T> SparseSet<T> {
     }
 }
 
+impl<T> Default for SparseSet<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // empty sparse set => created => no items
+    // empty sparse set => created with new => no items
     #[test]
-    fn empty_sparse_set_created_no_items() {
+    fn empty_sparse_set_created_with_new_no_items() {
         let sparse_set: SparseSet<i32> = SparseSet::new();
+
+        assert_eq!(sparse_set.len(), 0);
+        for _ in sparse_set.values() {
+            assert!(false);
+        }
+    }
+
+    // empty sparse set => created with default => no items
+    #[test]
+    fn empty_sparse_set_created_with_default_no_items() {
+        let sparse_set: SparseSet<i32> = SparseSet::default();
 
         assert_eq!(sparse_set.len(), 0);
         for _ in sparse_set.values() {
